@@ -61,7 +61,10 @@ def scenes() -> None:
 
 def icons() -> None:
     for folder in sorted((R1 / "icons").glob("*")):
-        files = sorted(folder.glob("*.png"), key=lambda p: int(p.stem.rsplit("-", 1)[1]) if "-" in p.stem and p.stem.rsplit("-", 1)[1].isdigit() else 0)
+        def num(p):
+            tail = p.stem[len(folder.name):].lstrip("-")
+            return int(tail) if tail.isdigit() else 0
+        files = sorted(folder.glob("*.png"), key=num)
         if not files:
             continue
         w, h = Image.open(files[0]).size
@@ -70,7 +73,7 @@ def icons() -> None:
         img = Image.new("RGBA", (8 * cw + 10, ((len(files) + 7) // 8) * chh + 10), BG)
         for i, f in enumerate(files):
             x, y = 10 + (i % 8) * cw, 10 + (i // 8) * chh
-            idx = f.stem.rsplit("-", 1)[1] if f.stem.rsplit("-", 1)[1].isdigit() else "0"
+            idx = str(num(f))
             # 半边深色、半边浅色底，看描边在两种底上都清楚
             d = ImageDraw.Draw(img)
             d.rectangle([x - 2, y + 12, x + w * s + 1, y + 12 + h * s + 1], fill=(70, 18, 26, 255))

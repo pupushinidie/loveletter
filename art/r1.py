@@ -243,7 +243,7 @@ EXTRA = {
     "prince": ("upper body portrait of a young medieval prince wearing a clearly visible thin gold crown circlet on his head, "
                "short chestnut brown hair, dark crimson doublet with a short velvet cape, holding a pair of leather gloves, confident look", (7, 8, 9)),
     "guard": ("upper body portrait of a stern medieval castle guard with a short beard, steel kettle helmet, chainmail, "
-              "a plain solid crimson tabard with a thin gold border and no emblem, no symbol, holding a tall halberd", (7, 8, 9)),
+              "a plain solid crimson tabard with a thin gold border and no emblem, no symbol, holding a tall halberd", (7,)),  # 评审已定 guard-s3-kick，不再补
 }
 
 
@@ -271,7 +271,50 @@ def extra() -> None:
                 print(name, "失败：", error, flush=True)
 
 
-GROUPS = {"extra": extra, "portraits": portraits, "scenes": scenes, "icons": icons, "deco": deco, "covers": covers}
+# ---------- 评审第 1 轮的返工 ----------
+PRINCE_EDIT = ("add a thin gold circlet crown with one small red gem on his head, resting on his forehead and clearly visible, "
+               "keep the face, hair, clothes, pose, lighting and background exactly the same, pixel art, no text")
+
+
+def fix() -> None:
+    """王子加冠（edit-image，每张底图一次调用）；favor-big 照 favor-8 出（v2 + style_image）。"""
+    folder = OUT / "portraits"
+    for base, seed in (("prince-s3", 5301), ("prince-s8", 5302), ("prince-s8", 5303)):
+        name = f"{base}-crown-{seed}"
+        if (folder / f"{name}.png").exists():
+            continue
+        try:
+            pixellab.generate_async(name, {
+                "image": pixellab.b64_image(folder / f"{base}.png"),
+                "description": PRINCE_EDIT,
+                "image_size": {"width": 64, "height": 88},
+                "width": 64,
+                "height": 88,
+                "no_background": False,
+                "text_guidance_scale": 8,
+                "seed": seed,
+            }, folder, endpoint="/edit-image")
+            print(name, "ok; spent", round(pixellab.spent_usd(), 4), flush=True)
+        except Exception as error:
+            print(name, "失败：", error, flush=True)
+    target = OUT / "icons" / "favor-big"
+    if not (target.exists() and any(target.glob("*.png"))):
+        ref = OUT / "favor8-x2.png"
+        Image.open(OUT / "icons" / "favor" / "favor-8.png").convert("RGBA").resize((32, 32), Image.NEAREST).save(ref)
+        try:
+            paths = pixellab.generate_async("favor-big", {
+                "description": ICONS["favor-big"][0] + ", the same design as the reference: a heart shaped gold setting holding a red heart gem" + ICON_STYLE,
+                "image_size": {"width": 32, "height": 32},
+                "no_background": True,
+                "style_image": {"image": pixellab.b64_image(ref), "size": {"width": 32, "height": 32}},
+                "seed": 1302,
+            }, target, endpoint="/generate-image-v2")
+            print("favor-big", len(paths), "张; spent", round(pixellab.spent_usd(), 4), flush=True)
+        except Exception as error:
+            print("favor-big 失败：", error, flush=True)
+
+
+GROUPS = {"fix": fix, "extra": extra, "portraits": portraits, "scenes": scenes, "icons": icons, "deco": deco, "covers": covers}
 
 if __name__ == "__main__":
     for group in sys.argv[1:] or list(GROUPS):

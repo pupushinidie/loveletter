@@ -121,11 +121,34 @@ def divider() -> Image.Image:
     return img
 
 
+def apply_fixes(art: Image.Image, fixes: list[dict]) -> Image.Image:
+    """插画的小修补（评审第 1 轮 P2：左上角被金币压住的蜡烛）。
+    - copy-cols：box 里的像素换成同一行往左/右挪 dx 列的像素（竖条纹帷幕用）；
+    - recolor-warm：box 里偏暖或偏亮的像素（蜡烛、烛光光晕）换成 bg 色，深色背景纹理保留。"""
+    art = art.convert("RGBA").copy()
+    px = art.load()
+    for fx in fixes:
+        x0, y0, x1, y1 = fx["box"]
+        if fx["op"] == "copy-cols":
+            src = art.copy().load()
+            for y in range(y0, y1 + 1):
+                for x in range(x0, x1 + 1):
+                    px[x, y] = src[x + fx["dx"], y]
+        elif fx["op"] == "recolor-warm":
+            bg = tuple(int(fx["bg"].lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) + (255,)
+            for y in range(y0, y1 + 1):
+                for x in range(x0, x1 + 1):
+                    r, g, b, a = px[x, y]
+                    if r - b > 10 or (r + g + b) / 3 > fx.get("lum", 55):
+                        px[x, y] = bg
+    return art
+
+
 def main() -> None:
     s = json.loads((ART / "selection.json").read_text("utf-8"))
     n = 0
     for role, item in s.get("portraits", {}).items():
-        art = Image.open(ART / item["file"]).convert("RGBA")
+        art = apply_fixes(Image.open(ART / item["file"]), item.get("fixes", []))
         save(cf.face(role, art), f"cards/{role}.png", (72, 100))
         x, y = item.get("miniCrop", [18, 2])
         save(cf.mini(role, art.crop((x, y, x + 28, y + 40))), f"cards/mini/{role}.png", (32, 44))

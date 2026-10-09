@@ -1,0 +1,25 @@
+{
+  "_note": "正式美术选了哪张。路径相对 art/。评审第 1 轮（handoff/art-review-1.md）推荐的已定；王子、favor-big、图标、印章、装饰、动画、封面待定。",
+  "portraits": {
+    "spy": {"file": "out/r1/portraits/spy-s1.png", "fixes": [{"op": "copy-cols", "box": [4, 8, 8, 46], "dx": -4}]},
+    "guard": {"file": "out/r1/portraits/guard-s3-kick.png"},
+    "priest": {"file": "out/r1/portraits/priest-s3.png"},
+    "baron": {"file": "out/r1/portraits/baron-s4.png", "fixes": [{"op": "recolor-warm", "box": [0, 7, 14, 36], "bg": "#0c0a1d", "lum": 26}]},
+    "handmaid": {"file": "out/r1/portraits/handmaid-s3.png"},
+    "chancellor": {"file": "out/r1/portraits/chancellor-s1.png"},
+    "king": {"file": "out/r1/portraits/king-s2.png", "miniCrop": [14, 0]},
+    "countess": {"file": "out/r1/portraits/countess-s2.png", "fixes": [{"op": "recolor-warm", "box": [0, 7, 15, 31], "bg": "#141a27"}, {"op": "recolor-warm", "box": [2, 31, 11, 56], "bg": "#141a27"}]},
+    "princess": {"file": "out/r1/portraits/princess-s3-kick.png"}
+  },
+  "scenes": {
+    "night-0": "out/r1/scenes/night-0-s11.png",
+    "night-1": "out/r1/scenes/night-1-s32.png",
+    "day-0": "out/r1/scenes/day-0-s22.png",
+    "day-1": "out/r1/scenes/day-1-s42.png"
+  },
+  "icons": {
+    "favor": {"file": "out/r1/icons/favor/favor-8.png"}
+  },
+  "seals": {},
+  "deco": {}
+}

@@ -954,77 +954,91 @@ def favor_empty() -> Image.Image:
 # ---------------- 座位印章 24×24 ----------------
 
 EMBLEMS = {
-    0: [  # 玫瑰
-        "..XXXXX..",
-        ".XX...XX.",
-        "XX.XXX.XX",
-        "X.XX.XX.X",
-        "X.X.X.X.X",
-        "XX.XXX.XX",
-        ".XX...XX.",
-        "..XXXXX..",
-        "....X....",
+    0: [  # 玫瑰（侧面：花苞 + 茎 + 叶）
+        "...XXXXX...",
+        "..XX.X.XX..",
+        "..X.XXX.X..",
+        "..XX...XX..",
+        "...XXXXX...",
+        ".....X.....",
+        ".XX..X.....",
+        "..XX.X..XX.",
+        ".....X.XX..",
+        ".....X.....",
+        ".....X.....",
     ],
-    1: [  # 百合（三瓣花）
-        "....X....",
-        "...XXX...",
-        ".X.XXX.X.",
-        "XX.XXX.XX",
-        "XXX.X.XXX",
-        ".XXXXXXX.",
-        "XXXXXXXXX",
-        "...XXX...",
-        "..X...X..",
+    1: [  # 钥匙（原来的百合缩到 24px 像一片大麻叶，换掉）
+        "....XXX....",
+        "...XX.XX...",
+        "...X...X...",
+        "...XX.XX...",
+        "....XXX....",
+        ".....X.....",
+        ".....X.....",
+        ".....XXX...",
+        ".....X.....",
+        ".....XX....",
+        ".....X.....",
     ],
     2: [  # 星
-        "....X....",
-        "....X....",
-        "...XXX...",
-        "XXXXXXXXX",
-        ".XXXXXXX.",
-        "..XXXXX..",
-        "..XX.XX..",
-        ".XX...XX.",
-        ".X.....X.",
+        ".....X.....",
+        ".....X.....",
+        "....XXX....",
+        "XXXXXXXXXXX",
+        ".XXXXXXXXX.",
+        "..XXXXXXX..",
+        "...XXXXX...",
+        "..XXXXXXX..",
+        "..XXX.XXX..",
+        ".XX.....XX.",
+        ".X.......X.",
     ],
     3: [  # 太阳
-        "X...X...X",
-        ".X.....X.",
-        "...XXX...",
-        "..XXXXX..",
-        "XXXXXXXXX",
-        "..XXXXX..",
-        "...XXX...",
-        ".X.....X.",
-        "X...X...X",
+        "X....X....X",
+        ".X...X...X.",
+        "...XXXXX...",
+        "..XXXXXXX..",
+        "..XXXXXXX..",
+        "XXXXXXXXXXX",
+        "..XXXXXXX..",
+        "..XXXXXXX..",
+        "...XXXXX...",
+        ".X...X...X.",
+        "X....X....X",
     ],
     4: [  # 新月
-        "...XXX...",
-        "..XX.....",
-        ".XX......",
-        ".XX......",
-        ".XX......",
-        ".XX......",
-        ".XXX.....",
-        "..XXX..X.",
-        "...XXXX..",
+        "....XXXX...",
+        "..XXXX.....",
+        ".XXX.......",
+        ".XXX.......",
+        "XXX........",
+        "XXX........",
+        "XXX........",
+        ".XXX.......",
+        ".XXX.......",
+        "..XXXX.....",
+        "....XXXX...",
     ],
     5: [  # 羽毛
-        "......XX.",
-        ".....XXX.",
-        "....XXXX.",
-        "...XXXX..",
-        "..XXXX...",
-        ".XXXX....",
-        ".XXX.....",
-        "X........",
-        "X........",
+        ".........XX",
+        "........XXX",
+        ".......XXXX",
+        "......XXXX.",
+        ".....XXXX..",
+        "....XXXX...",
+        "...XXXX....",
+        "..XXXX.....",
+        "..XX.......",
+        ".X.........",
+        "X..........",
     ],
 }
 SEAT_HEX = ["#d23a4a", "#3d6fd6", "#3fa45b", "#e0a030", "#9a5bd0", "#2fb5ad"]
 
 
 def seal(idx: int) -> Image.Image:
+    """座位火漆印：座位色的不规则圆 + 左上高光 + 浅色浮雕图案（带右下深色投影）。
+    图案用浅色而不是深色，是为了色弱时也能靠图案分座位（评审第 1 轮：绯红/翠绿、宝蓝/紫罗兰在色盲模拟下分不开）。"""
     base = rgb(SEAT_HEX[idx])
     img = Image.new("RGBA", (24, 24), CLEAR)
     px = img.load()
@@ -1040,29 +1054,24 @@ def seal(idx: int) -> Image.Image:
                 c = base
                 if dist > r - 1.6:
                     c = darken(base, 0.35) if dx + dy > -2 else lighten(base, 0.15)
-                elif 6.8 <= dist <= 7.8:
-                    c = darken(base, 0.3)
-                elif dist < 6.8 and dx + dy < -3:
-                    c = lighten(base, 0.12)
+                elif dist < 8.5 and dx + dy < -4:
+                    c = lighten(base, 0.1)
                 px[x, y] = c
     em = EMBLEMS[idx]
+    ox, oy = 6, 6
+    shadow, light = darken(base, 0.55), lighten(base, 0.72)
     for r_, row in enumerate(em):
         for c_, ch in enumerate(row):
             if ch == "X":
-                x, y = 8 + c_, 8 + r_
-                px[x, y] = darken(base, 0.45)
-                if x - 1 >= 0 and px[x - 1, y - 1][:3] == base[:3] or True:
-                    pass
-    # 浮雕高光：图案左上方一格提亮
+                sx, sy = ox + c_ + 1, oy + r_ + 1
+                if em[r_ + 1][c_ + 1] != "X" if r_ + 1 < len(em) and c_ + 1 < len(row) else True:
+                    px[sx, sy] = shadow
     for r_, row in enumerate(em):
         for c_, ch in enumerate(row):
             if ch == "X":
-                x, y = 8 + c_ - 1, 8 + r_ - 1
-                if 0 <= x and 0 <= y and (r_ == 0 or c_ == 0 or em[r_ - 1][c_ - 1] != "X"):
-                    if px[x, y][:3] != darken(base, 0.45)[:3]:
-                        px[x, y] = lighten(base, 0.3)
-    px[6, 5] = lighten(base, 0.6)
-    px[5, 6] = lighten(base, 0.45)
+                px[ox + c_, oy + r_] = light
+    px[5, 4] = lighten(base, 0.6)
+    px[4, 5] = lighten(base, 0.45)
     return outline(img)
 
 
