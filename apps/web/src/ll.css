@@ -423,7 +423,8 @@
 .ll-screen.mobile .ll-opps { display: flex; flex-direction: column; gap: 8px; }
 .ll-screen.mobile .ll-seat { width: auto; }
 .ll-screen.mobile .ll-seat-body { min-height: 44px; }
-.ll-screen.mobile .ll-side { min-height: 280px; }
+.ll-screen.mobile .ll-side { min-height: 0; }
+.ll-screen.mobile .ll-tabs { flex: 0 0 auto; height: 360px; }
 .ll-screen.mobile .ll-tip { width: 200px; }
 
 /* 手机上的弹窗：边距收紧，猜牌 4 列小牌 1× */

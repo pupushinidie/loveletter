@@ -37,6 +37,7 @@ import {
   type SceneName,
 } from "@loveletter/game";
 import { HomeScreen, RoomScreen } from "./App.js";
+import { useConfirm } from "./confirm.js";
 import GameBoard from "./GameBoard.js";
 import RoomChat from "./RoomChat.js";
 import { socket } from "./socket.js";
@@ -111,6 +112,8 @@ function BoardPreview() {
   const room = useMemo(() => withChat({ ...previewRoom(full, { ...roomOptions(), auto: autoIds }) }), [full, autoIds]);
   const voice = useVoice(room);
   const [watchId, setWatchId] = useState(full.players[0]!.id);
+  // 解散确认框和真房间里一样（App 里的那个）
+  const [confirm, confirmDialog] = useConfirm();
 
   function command(cmd: GameCommand, as = viewer) {
     try {
@@ -150,11 +153,12 @@ function BoardPreview() {
         onCommand={(cmd) => command(cmd)}
         onRematch={() => setFull(buildGame())}
         onAuto={(enabled) => setAutoIds((ids) => (enabled ? [...ids, viewer] : ids.filter((id) => id !== viewer)))}
-        onDissolve={() => setError("预览页：解散只在真房间里有效")}
+        onDissolve={() => void confirm({ title: "解散房间？", detail: "所有玩家都会被移出，当前对局也会结束。", confirmLabel: "解散" })}
         watchId={watchId}
         onWatch={setWatchId}
         onLeave={() => setError("预览页：离开观战只在真房间里有效")}
       />
+      {confirmDialog}
     </main>
   );
 }
