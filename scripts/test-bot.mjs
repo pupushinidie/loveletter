@@ -1,32 +1,35 @@
-// 本地测试用的陪玩机器人（先 npm run dev）。
-//   node scripts/test-bot.mjs host [人数] [机器人数]  → 机器人建房、拉够机器人，等真人加入凑满后自动开局
-//   node scripts/test-bot.mjs join <房间码> [昵称]   → 以一个机器人身份加入别人的房间
-// 机器人轮到自己时：随机挑一种走法；推进后按「再掷爆掉的概率」和本回合掷了几次决定收手还是再掷。
-// 环境变量 BOT_DELAY_MS 控制每步的思考时间（默认 1500），BOT_IDLE=1 时只挂着不动（等超时自动处理），
-// BOT_GREEDY=1 时更贪（更晚收手，方便看爆掉的动画）。
+// 本地测试用的陪玩脚本（先 npm run dev，或者在服务器上连 localhost:3017）。
+//   node scripts/test-bot.mjs host [人数] [脚本玩家数]  → 脚本建房、拉够脚本玩家，等真人加入凑满后自动开局
+//                                                       （脚本玩家数 = 人数时自己打完一整场）
+//   node scripts/test-bot.mjs join <房间码> [昵称]       → 以一个脚本玩家的身份加入别人的房间
+// 轮到自己时：不打公主（除非只能打它），其余从合法行动里随机挑；结算画面点「下一局」。
+// 环境变量：BOT_DELAY_MS 每步思考时间（默认 1200）；BOT_IDLE=1 只挂着不动（等超时）；
+// SERVER_URL 服务器地址（默认 http://localhost:3017）；SOCKET_PATH 默认 /socket.io；REMATCH=1 打完再来一局（第二场打完退出）。
 import { io } from "socket.io-client";
-import { bustProbability, legalActions } from "../packages/game/dist/index.js";
+import { legalActions } from "../packages/game/dist/index.js";
 
 const URL = process.env.SERVER_URL ?? "http://localhost:3017";
 const PATH = process.env.SOCKET_PATH ?? "/socket.io";
-const DELAY = Number(process.env.BOT_DELAY_MS ?? 1500);
+const DELAY = Number(process.env.BOT_DELAY_MS ?? 1200);
 const IDLE = process.env.BOT_IDLE === "1";
-const GREEDY = process.env.BOT_GREEDY === "1";
-const NAMES = ["岩羊", "雪豹", "山鹰", "牦牛"];
+const REMATCH = process.env.REMATCH === "1";
+const NAMES = ["信使阿甲", "信使阿乙", "信使阿丙", "信使阿丁", "信使阿戊", "信使阿己"];
 
-/** 推进后：爆掉概率越高、本回合已经掷得越多，越倾向收手；能登顶就收手。 */
-function decide(game) {
-  const atTop = game.runners.some((runner) => runner.height >= ({ 2: 3, 3: 5, 4: 7, 5: 9, 6: 11, 7: 13, 8: 11, 9: 9, 10: 7, 11: 5, 12: 3 })[runner.column]);
-  if (atTop && !GREEDY) return { type: "STOP" };
-  const risk = bustProbability(game);
-  const appetite = GREEDY ? 0.6 : 0.35;
-  return risk + game.rollsThisTurn * 0.05 > appetite + Math.random() * 0.15 ? { type: "STOP" } : { type: "ROLL" };
+function choose(actions) {
+  const safe = actions.filter((command) => !(command.type === "PLAY" && command.card === "princess"));
+  const pool = safe.length > 0 ? safe : actions;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
+
+const nameOf = (game, id) => game.players.find((player) => player.id === id)?.name ?? id;
+const tokens = (game) => game.players.map((player) => `${player.name}:${player.tokens}`).join(" ");
 
 function bot(name, onRoom) {
   const socket = io(URL, { path: PATH, transports: ["websocket"] });
   let acting = false;
   let latest = null;
+  let games = 0;
+  let announced = false;
   const emit = (event, ...args) => new Promise((resolve) => socket.emit(event, ...args, resolve));
   // 回执和新状态的广播可能在同一批消息里到达：每做完一步都回头看最新状态，免得漏掉轮到自己。
   async function tick() {
@@ -36,52 +39,83 @@ function bot(name, onRoom) {
     const seat = room.members.find((member) => member.id === socket.id)?.playerId;
     if (!seat || legalActions(game, seat).length === 0) return;
     acting = true;
-    await new Promise((resolve) => setTimeout(resolve, DELAY));
+    await new Promise((resolve) => setTimeout(resolve, game.phase === "roundEnd" ? DELAY * 2 : DELAY));
     try {
-      const actions = legalActions(game, seat);
-      const command = game.stage === "decide" ? decide(game) : actions[Math.floor(Math.random() * actions.length)];
-      const result = await emit("game:command", command);
-      if (!result.ok) console.log(name, "行动失败", result.error);
+      // 等的时候状态可能变了（超时、别人动了）：重新读最新状态再决定
+      const fresh = latest?.game;
+      const actions = fresh ? legalActions(fresh, seat) : [];
+      if (actions.length > 0) {
+        const result = await emit("game:command", choose(actions));
+        if (!result.ok) console.log(name, "行动失败", result.error);
+      }
     } finally {
       acting = false;
     }
     if (latest !== room) void tick();
   }
   socket.on("room:updated", (room) => {
+    const before = latest?.game;
     latest = room;
     onRoom?.(room, socket);
     const game = room.game;
+    if (game && game.phase !== "playing" && before?.phase === "playing" && game.lastRound) {
+      const result = game.lastRound;
+      console.log(
+        name,
+        `第 ${result.round} 小局（${result.reason === "showdown" ? "亮牌" : "只剩一人"}）：${result.winners.map((id) => nameOf(game, id)).join("、")} 赢`
+          + `${result.spyBonus ? `，${nameOf(game, result.spyBonus)} 间谍 +1` : ""}；标记 ${tokens(game)}`,
+      );
+    }
     if (game?.phase === "finished") {
-      const scores = game.players.map((player) => `${player.name}:${player.score}`).join(" ");
-      console.log(name, "游戏结束，登顶数", scores, "胜者", game.finalResult?.winner);
-      setTimeout(() => process.exit(0), 200);
+      if (!announced) {
+        announced = true;
+        games += 1;
+        console.log(name, `整场结束，赢家 ${(game.winners ?? []).map((id) => nameOf(game, id)).join("、")}；标记 ${tokens(game)}`);
+        if (REMATCH && games === 1) void emit("room:rematch", true);
+        else setTimeout(() => process.exit(0), 300);
+      }
       return;
     }
+    announced = false;
     void tick();
   });
-  socket.on("room:closed", ({ reason }) => { console.log(name, "房间关闭：", reason); process.exit(0); });
+  socket.on("room:closed", ({ reason }) => {
+    console.log(name, "房间关闭：", reason);
+    process.exit(0);
+  });
+  socket.on("connect_error", (error) => {
+    console.log(name, "连不上服务器：", error.message);
+    process.exit(1);
+  });
   return { socket, emit };
 }
 
 const [mode, arg1, arg2] = process.argv.slice(2);
 if (mode === "join") {
-  const { socket, emit } = bot(arg2 ?? NAMES[0]);
-  socket.on("connect", async () => console.log("join", (await emit("room:join", { name: arg2 ?? NAMES[0], code: arg1 })).ok));
+  const name = arg2 ?? NAMES[1];
+  const { socket, emit } = bot(name);
+  socket.on("connect", async () => {
+    const result = await emit("room:join", { name, code: arg1 });
+    console.log("加入", result.ok ? "成功" : result.error);
+    if (!result.ok) process.exit(1);
+  });
 } else {
-  const capacity = Number(arg1 ?? 2);
+  const capacity = Number(arg1 ?? 3);
   const bots = Number(arg2 ?? capacity - 1);
   let started = false;
-  const host = bot(NAMES[0], async (room, socket) => {
+  const host = bot(NAMES[0], async (room) => {
     if (!started && room.status === "waiting" && room.members.length === capacity) {
       started = true;
       const result = await host.emit("room:start");
-      console.log("开局", result.ok || result.error);
+      console.log("开局", result.ok ? "成功" : result.error);
     }
-    void socket;
   });
   host.socket.on("connect", async () => {
     const created = await host.emit("room:create", { name: NAMES[0], capacity });
-    if (!created.ok) { console.log(created.error); process.exit(1); }
+    if (!created.ok) {
+      console.log(created.error);
+      process.exit(1);
+    }
     console.log("房间码", created.data.code);
     for (let index = 1; index < bots; index += 1) {
       const name = NAMES[index];
