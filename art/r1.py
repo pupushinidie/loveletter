@@ -155,8 +155,12 @@ ICONS: dict[str, tuple[str, int, int]] = {
 }
 
 
+# 这几样是界面上的小符号（看牌、比牌、换牌、指认、牌堆、参考卡），代码画的就是正式版（见 spec 2.5），不出 v2，省下排队时间
+CODE_ICONS = {"eye", "duel", "swap", "target", "deck", "book"}
+
+
 def icons(names=None) -> None:
-    for key in names or ICONS:
+    for key in names or [k for k in ICONS if k not in CODE_ICONS]:
         prompt, w, h = ICONS[key]
         folder = OUT / "icons" / key
         if folder.exists() and any(folder.glob("*.png")):

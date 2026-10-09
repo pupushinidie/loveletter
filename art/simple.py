@@ -1363,8 +1363,9 @@ add("table/cloth-day.png", 32, 32, 1, "code", lambda: cf.cloth(True))
 for _i, _kind in enumerate(("hall", "study")):
     add(f"scene/night-{_i}.png", 512, 288, 1, "simple", lambda k=_kind: scene(k, False))
     add(f"scene/day-{_i}.png", 512, 288, 1, "simple", lambda k=_kind: scene(k, True))
+CODE_FINAL_ICONS = {"eye", "duel", "swap", "target", "deck", "book"}  # 界面小符号，代码画的就是正式版
 for _name, _fn in ICONS16.items():
-    add(f"icons/{_name}.png", 16, 16, 1, "simple", _fn)
+    add(f"icons/{_name}.png", 16, 16, 1, "code" if _name in CODE_FINAL_ICONS else "simple", _fn)
 add("icons/favor-empty.png", 16, 16, 1, "simple", favor_empty)
 add("icons/favor-big.png", 32, 32, 1, "simple", lambda: heart_gem(32))
 for _i in range(6):
