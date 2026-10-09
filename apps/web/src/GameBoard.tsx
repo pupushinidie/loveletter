@@ -128,8 +128,11 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
   const initialLog = useMemo(() => game.history.map((event) => describeEvent(event, nameOf, selfId)).filter((line): line is Line => line !== null), []);
   const [log, setLog] = useState<Line[]>(initialLog);
   const [fresh, setFresh] = useState<Fresh>(NO_FRESH);
-  // 刚进来（或刷新）时，最近一步里有只给自己看的结果也弹出来
-  const [reveal, setReveal] = useState<Reveal | null>(() => (spectating ? null : revealFrom(game.events, selfId)));
+  // 刚进来（或刷新）时，最近一步里有只给自己看的结果也弹出来。
+  // 托管中、或者这一步是超时由人机代打的，不弹（人在不在都不知道，弹窗会挡住「取消托管」和结算）：记录里有只给自己看的一条。
+  const [reveal, setReveal] = useState<Reveal | null>(() =>
+    spectating || member?.auto || game.phase !== "playing" || timedOut(game.events, selfId) ? null : revealFrom(game.events, selfId),
+  );
   const seen = useRef({ version: game.version, round: game.round, len: game.history.length, players: game.players });
   useEffect(() => {
     const prev = seen.current;
@@ -149,12 +152,17 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
       if (player.protected && !before.protected) shield.add(player.id);
     }
     setFresh({ discards, out, shield });
-    if (!spectating) {
+    if (!spectating && !autoPlaying && game.phase === "playing" && !timedOut(newEvents, selfId)) {
       const found = revealFrom(newEvents, selfId);
       if (found) setReveal(found);
     }
     seen.current = { version: game.version, round: game.round, len: game.history.length, players: game.players };
   }, [game.version]);
+
+  // 进了托管、或者一小局已经结束：秘密结果弹窗收起来（记录里还在），不挡「取消托管」和结算
+  useEffect(() => {
+    if (autoPlaying || game.phase !== "playing") setReveal(null);
+  }, [autoPlaying, game.phase]);
 
   // ---------- 选牌 ----------
   const [sel, setSel] = useState<Selection | null>(null);
@@ -412,7 +420,7 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
   );
 
   const timer = secondsLeft !== null && game.phase !== "finished" && (
-    <b className={secondsLeft <= 10 ? "ll-timer low" : "ll-timer"} data-tutorial="timer" title="这一步还剩几秒；超时由系统替你打完这一回合">{secondsLeft}s</b>
+    <b className={secondsLeft <= 10 ? "ll-timer low" : "ll-timer"} data-tutorial="timer" title="这一步还剩几秒；超时由人机替你打完这一回合">{secondsLeft}s</b>
   );
 
   const turnWho = playing && actor ? (
@@ -498,14 +506,19 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
       )}
       {reveal && <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={layout.mobile ? 1 : layout.hand} onClose={() => setReveal(null)} />}
       {!reveal && game.lastRound && game.phase !== "playing" && !resultHidden && (
-        <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} />
+        <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
       )}
       {!reveal && game.phase === "finished" && !finalHidden && resultHidden && (
-        <FinalDialog game={game} room={room} me={selfId} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} />
+        <FinalDialog game={game} room={room} me={selfId} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
       )}
       {confirmDialog}
     </div>
   );
+}
+
+/** 这串事件里有没有「me 超时、由人机代打」（这一回合的秘密结果不弹窗）。 */
+function timedOut(events: readonly GameEvent[], me: string): boolean {
+  return me !== "" && events.some((event) => event.type === "TurnTimedOut" && event.player === me);
 }
 
 /** 一串事件里最后一个只给自己看的结果：自己出牧师看到的牌、自己参与的比牌、自己参与的换牌。 */

@@ -601,3 +601,8 @@
 .app-shell .gm-confirm .gm-panel-actions .quiet-button { min-height: 44px; padding: 0 16px; font-size: 24px; white-space: nowrap; }
 /* 规则弹窗、房间设置浮层挂在顶栏里，顶栏是 nowrap：这里恢复换行 */
 .app-shell .ll-topbar :is(.gm-modal-backdrop, .game-room-popover) { white-space: normal; }
+
+/* 托管中：结算、整场结束弹窗里的「托管中 · 取消托管」条 */
+.ll-dialog-auto { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; padding: 6px 10px; color: var(--gold); background: #3a2c10; }
+.ll-dialog-auto span { font-size: 12px; }
+.app-shell .ll-dialog-auto .quiet-button { min-height: 40px; padding: 0 14px; font-size: 24px; white-space: nowrap; }

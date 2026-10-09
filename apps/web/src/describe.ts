@@ -131,6 +131,6 @@ export function describeEvent(event: GameEvent, name: (id: string) => string, me
     case "GameEnded":
       return { text: `整场结束：${event.winners.map(name).join("、")} 获胜`, icon: "crown", mine: event.winners.includes(me) };
     case "TurnTimedOut":
-      return { text: `${name(event.player)} 超时，系统替${mine(event.player) ? "你" : "他"}打完这一回合`, mine: mine(event.player) };
+      return { text: `${name(event.player)} 超时，人机替${mine(event.player) ? "你" : "他"}打完这一回合`, mine: mine(event.player) };
   }
 }

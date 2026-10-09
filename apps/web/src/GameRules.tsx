@@ -61,7 +61,7 @@ function GameRules({ className = "quiet-button" }: { className?: string }) {
             <div className="game-rules-block">
               <h3>时间和托管</h3>
               <p>
-                每一步限时 30 秒，超时由系统替你打完这一回合；连续两次超时转人机托管，点「取消托管」就能收回。掉线时也由人机代打，回来接着玩。
+                每一步限时 30 秒，超时由人机替你打完这一回合；连续两次超时转人机托管，点「取消托管」就能收回。掉线时也由人机代打，回来接着玩。
               </p>
             </div>
             <div className="gm-panel-actions">

@@ -574,7 +574,7 @@ function RoomView({ room, busy, error, notice, onCopyCode, onLeave, onStart, onK
                 </div>
               ))}
             </div>
-            <p className="field-hint">每一步限时 30 秒，超时由系统替你打完这一回合；连续两次超时转人机托管，掉线时也由人机代打，回来能接上。</p>
+            <p className="field-hint">每一步限时 30 秒，超时由人机替你打完这一回合；连续两次超时转人机托管，掉线时也由人机代打，回来能接上。</p>
             <RoomSettingsPanel room={room} />
             <SeatSwitch room={room} />
             <div className="room-actions">

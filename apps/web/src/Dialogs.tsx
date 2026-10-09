@@ -193,8 +193,10 @@ export function RevealDialog({ reveal, me, name, seatOf, scale, onClose }: {
 
 /* ---------- 一小局结算 ---------- */
 
-export function RoundResultDialog({ game, room, me, name, seconds, compact = false, onReady, onHide }: {
+export function RoundResultDialog({ game, room, me, name, seconds, compact = false, onReady, onHide, onCancelAuto }: {
   game: GameState;
+  /** 托管中：弹窗里放一个「取消托管」（弹窗盖住了牌桌上那个）。 */
+  onCancelAuto?: () => void;
   /** 手机：亮牌用小牌。 */
   compact?: boolean;
   room: LobbyRoomSnapshot;
@@ -272,12 +274,16 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
       {game.phase === "roundEnd" && (
         <div className="ll-result-next">
           <span>
+            {onCancelAuto ? "托管中：人机替你出牌 · " : ""}
             {result.nextStarter ? `下一局 ${name(result.nextStarter)} 先手` : ""}
             {humans.length > 0 ? ` · 已准备 ${readyCount}/${humans.length}` : ""}
           </span>
           <div className="gm-panel-actions">
             <button className="quiet-button" type="button" onClick={onHide}>看牌桌</button>
-            {me !== "" && (
+            {onCancelAuto && (
+              <button className="primary-button" type="button" data-tutorial="cancel-auto-dialog" onClick={onCancelAuto}>取消托管</button>
+            )}
+            {me !== "" && !onCancelAuto && (
               <button className="primary-button" type="button" disabled={!canReady} data-tutorial="next-round-button" onClick={onReady}>
                 {iAmReady ? `等其他人${seconds !== null ? `（${seconds}s）` : ""}` : `下一局${seconds !== null ? `（${seconds}s）` : ""}`}
               </button>
@@ -287,6 +293,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
       )}
       {game.phase === "finished" && (
         <div className="gm-panel-actions">
+          {onCancelAuto && <button className="quiet-button" type="button" data-tutorial="cancel-auto-dialog" onClick={onCancelAuto}>取消托管</button>}
           <button className="primary-button" type="button" onClick={onHide}>看整场结果</button>
         </div>
       )}
@@ -296,8 +303,9 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
 
 /* ---------- 整场结束 ---------- */
 
-export function FinalDialog({ game, room, me, spectating, name, onRematch, onLeave, onHide }: {
+export function FinalDialog({ game, room, me, spectating, name, onRematch, onLeave, onHide, onCancelAuto }: {
   game: GameState;
+  onCancelAuto?: () => void;
   room: LobbyRoomSnapshot;
   me: string;
   spectating: boolean;
@@ -350,6 +358,12 @@ export function FinalDialog({ game, room, me, spectating, name, onRematch, onLea
       ) : (
         <div className="gm-panel-actions">
           <button className="quiet-button" type="button" onClick={onHide}>看牌桌</button>
+        </div>
+      )}
+      {onCancelAuto && (
+        <div className="ll-dialog-auto" role="status">
+          <span>托管中：人机替你出牌</span>
+          <button className="quiet-button" type="button" data-tutorial="cancel-auto-dialog" onClick={onCancelAuto}>取消托管</button>
         </div>
       )}
     </Modal>
