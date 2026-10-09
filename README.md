@@ -9,7 +9,7 @@
 ```bash
 npm install
 npm run dev          # 服务器 :3017，网页 :5190
-npm test             # 规则引擎 + 服务器测试
+npm test             # 139 项：规则书用例 90、2–6 人各 300 整场随机对局、隐藏信息、预览局面、服务器 19
 npm run typecheck    # 规则包、测试、服务器、网页
 BASE_PATH=/loveletter/ npm run build
 ```
@@ -23,6 +23,7 @@ BASE_PATH=/loveletter/ npm run build
 - `node scripts/test-bot.mjs host 3 1`：陪玩脚本建一个 3 人房、自己坐一个座位，打印房间码；你在网页里用房间码加入，凑满后自动开局。`host 4 4` 是四个脚本自己打完一整场。
 - `node scripts/test-bot.mjs join <房间码> [昵称]`：以一个脚本玩家的身份加入别人的房间。
 - `BOT_DELAY_MS` 调思考时间（默认 1200），`BOT_IDLE=1` 只挂着不动（等超时），`SERVER_URL` 换服务器地址。
+- `node scripts/spy.mjs [人数] [场数]`：抓包。两个 socket 当玩家、一个观战，连上 dev 服务器打完整场，逐条检查发给 B 和观战的数据里有没有牌堆、种子、别人的手牌、不该给的私密事件，有问题退出码 1。
 - 网页上的牌桌现在是**调试牌桌**（把状态列出来，每个合法行动一个按钮），正式牌桌由界面阶段来做。
 
 ## 规则（用自己的话说）
