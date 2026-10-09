@@ -23,6 +23,8 @@ import {
 // 服务端在导入时读这两个变量：每一步 400 ms 超时，人机立刻行动。
 process.env.TURN_MS = "400";
 process.env.BOT_DELAY_SCALE = "0";
+const ADMIN_TOKEN = "game-test-admin-token";
+process.env.ADMIN_TOKEN = ADMIN_TOKEN;
 
 type TestSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 type Hooks = typeof import("../src/index.js").testHooks;
@@ -332,6 +334,27 @@ describe("情书服务器", () => {
     // 原昵称在线时别人冒用不了
     const impostor = await connect();
     expect((await call<LobbyRoomSnapshot>((ack) => impostor.emit("room:join", { name, code }, ack))).ok).toBe(false);
+  });
+
+  it("管理员：列表里看得到对局中的房间（标记数、轮到谁）；口令不对解散不了，口令对了强制解散，玩家和观战都收到通知", async () => {
+    const { code, players } = await startRoom(3);
+    const watcher = await connect();
+    expect((await call<LobbyRoomSnapshot>((ack) => watcher.emit("room:join", { name: nick("看客"), code, spectate: true }, ack))).ok).toBe(true);
+    const admin = await connect();
+    const hostName = latest.get(players[0]!)!.members[0]!.name;
+    const listed = await call<import("@loveletter/game").PublicRoomSummary[]>((ack) => admin.emit("lobby:get", ack));
+    if (!listed.ok) throw new Error(listed.error);
+    const summary = listed.data.find((room) => room.players[0]?.name === hostName)!;
+    expect(summary.status).toBe("playing");
+    expect(summary.players.every((player) => player.score === 0)).toBe(true);
+    expect(summary.players.filter((player) => player.isActive)).toHaveLength(1);
+    expect((await call<void>((ack) => admin.emit("admin:verify", "wrong", ack))).ok).toBe(false);
+    expect((await call<void>((ack) => admin.emit("admin:dissolve", { roomId: summary.id, token: "wrong" }, ack))).ok).toBe(false);
+    const closed = Promise.all([...players, watcher].map((client) => new Promise<string>((resolve) => client.once("room:closed", ({ reason }) => resolve(reason)))));
+    // 上一次口令错误后要等 2 秒才能再试
+    await new Promise((resolve) => setTimeout(resolve, 2100));
+    expect((await call<void>((ack) => admin.emit("admin:dissolve", { roomId: summary.id, token: ADMIN_TOKEN }, ack))).ok).toBe(true);
+    for (const reason of await closed) expect(reason).toContain("管理员");
   });
 
   it("整场打完 → 再来一局；全程每个连接（含观战、人机房）收到的状态都没有不该看的东西", async () => {
