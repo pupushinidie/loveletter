@@ -194,10 +194,15 @@ function runGames(count: number): Summary {
         break;
       }
       if (before.phase === "playing" && state.phase !== "playing") {
+        const result = state.lastRound;
+        if (!result) {
+          problem("小局结束了却没有结算");
+          break;
+        }
         summary.rounds += 1;
-        if (state.lastRound.reason === "showdown") summary.showdowns += 1;
-        if (state.lastRound.winners.length > 1) summary.ties += 1;
-        if (state.lastRound.spyBonus) summary.spyBonuses += 1;
+        if (result.reason === "showdown") summary.showdowns += 1;
+        if (result.winners.length > 1) summary.ties += 1;
+        if (result.spyBonus) summary.spyBonuses += 1;
         const roundIssue = roundEndProblem(before, state);
         if (roundIssue) {
           problem(roundIssue);

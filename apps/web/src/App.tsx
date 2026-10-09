@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { CAPACITY_OPTIONS, type Capacity, type GameCommand, type LobbyRoomSnapshot, type PublicRoomSummary } from "@loveletter/game";
-import { climberArt, dieArt, sceneArt, SEATS } from "./art.js";
 import { useConfirm } from "./confirm.js";
 import GameBoard from "./GameBoard.js";
 import GameRules from "./GameRules.js";
@@ -25,7 +24,7 @@ function normalizeRoomCode(value: string): string {
 function App() {
   const [mode, setMode] = useState<EntryMode>("create");
   const [name, setName] = useState("");
-  const [capacity, setCapacity] = useState<Capacity>(2);
+  const [capacity, setCapacity] = useState<Capacity>(4);
   const [confirmAction, confirmDialog] = useConfirm();
   // 白天 / 夜间画面：首页、等候房间、牌桌共用，顶栏按钮随时切换；和游戏中心、其他游戏共用同一个选择。
   const [theme, toggleTheme] = useTheme();
@@ -217,7 +216,7 @@ function App() {
     const players = room.game.players;
     const watched = players.some((player) => player.id === watchId) ? watchId : players[0]!.id;
     return (
-      <main className="app-shell cs-game">
+      <main className="app-shell ll-game">
         <GameBoard
           room={room}
           busy={busy}
@@ -264,7 +263,7 @@ function App() {
           onDissolve={dissolveRoom}
         />
         <RoomChat room={room} voice={voice} />
-        <footer className="page-footer">再掷一次，还是就此扎营？</footer>
+        <footer className="page-footer">把心意送到公主手里。</footer>
         {confirmDialog}
       </main>
     );
@@ -283,18 +282,13 @@ function App() {
 
       <section className="welcome-grid">
         <div className="welcome-copy">
-          <div className="eyebrow"><span className="eyebrow-line" /> 在线对战 · 2–4 人 · 测试版</div>
-          <h1>欲罢不能</h1>
+          <div className="eyebrow"><span className="eyebrow-line" /> 在线对战 · 2–6 人 · 测试版</div>
+          <h1>情书</h1>
           <p className="welcome-description">
-            掷 4 颗骰子，两两分组，带着 3 个登山者往 2–12 号登山路上爬。
-            每爬一步都要选：再掷一次继续冒险，还是收手扎营保住进度？贪心爆掉，这回合就白爬了。
-            先登顶 3 条路的人获胜。创建一间私人房间，或输入房间码加入朋友的对局；人不够可以加人机。
+            整副只有 21 张牌，每人手里只拿一张。轮到你时抽一张、打一张：猜别人的牌、偷看、比大小、换牌……
+            撑到最后，或者牌堆抽完时手里点数最大，就赢下这一小局。先攒够钟情标记的人获胜。
+            创建一间私人房间，或输入房间码加入朋友的对局；人不够可以加人机。
           </p>
-          <img className="cs-hero" src={sceneArt.hero} alt="" />
-          <div className="cs-showcase" aria-hidden="true">
-            {SEATS.map((seat, index) => <img key={seat.key} src={climberArt(index)} alt="" />)}
-            {[3, 4, 5, 6].map((face) => <img key={face} className="cs-showcase-die" src={dieArt(face)} alt="" />)}
-          </div>
         </div>
 
         <section className="entry-card" aria-labelledby="entry-title">
@@ -397,16 +391,16 @@ function App() {
         <div className="how-item"><span className="how-number">03</span><span>开始对局</span></div>
       </section>
       <OnlineRooms rooms={lobbyRooms} connected={connected} busy={busy} onJoin={joinListed} />
-      <footer className="page-footer">再掷一次，还是就此扎营？</footer>
+      <footer className="page-footer">把心意送到公主手里。</footer>
     </main>
   );
 }
 
 function Brand() {
   return (
-    <a className="brand" href={import.meta.env.BASE_URL} aria-label="欲罢不能首页">
+    <a className="brand" href={import.meta.env.BASE_URL} aria-label="情书首页">
       <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
-      <span className="brand-name">欲罢不能<span> CAN'T STOP</span></span>
+      <span className="brand-name">情书<span> LOVE LETTER</span></span>
     </a>
   );
 }
@@ -506,7 +500,7 @@ function RoomView({
                 </div>
               ))}
             </div>
-            <p className="field-hint">每一步限时 45 秒：没掷骰就超时跳过这回合，掷了骰子后超时自动收手。</p>
+            <p className="field-hint">每一步限时 30 秒，超时由系统替你打完这一回合；连续两次超时转人机托管。</p>
             <RoomSettingsPanel room={room} />
             <SeatSwitch room={room} />
             <div className="room-actions">

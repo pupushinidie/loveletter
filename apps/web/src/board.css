@@ -1,0 +1,12 @@
+/*
+ * 调试牌桌的样式（引擎阶段联调用，界面阶段会换成正式牌桌）。
+ * 白天版由 day-theme.ts 按 day-palette.ts 从这里生成。
+ */
+.ll-debug { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 24px; }
+.ll-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 16px; color: var(--text); }
+.ll-line { margin: 0; font-size: 14px; color: var(--text); line-height: 1.6; }
+.ll-players { width: 100%; border-collapse: collapse; font-size: 14px; color: var(--text); }
+.ll-players th, .ll-players td { border: 1px solid #263759; padding: 6px 8px; text-align: left; }
+.ll-players tr.ll-active td { background: #3a2c10; }
+.ll-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--text); }
+.ll-log { max-height: 280px; overflow-y: auto; margin: 0; padding-left: 28px; font-size: 13px; color: var(--muted); line-height: 1.6; }
