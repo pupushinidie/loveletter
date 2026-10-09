@@ -1,7 +1,7 @@
 import type { GameCommand, GameState } from "./types.js";
 
-/** 房间人数：2–4 人（规格书第 1 节）。 */
-export const CAPACITY_OPTIONS = [2, 3, 4] as const;
+/** 房间人数：2–6 人（开工拍板：2 人也能开，3 人以上更好玩）。 */
+export const CAPACITY_OPTIONS = [2, 3, 4, 5, 6] as const;
 export type Capacity = (typeof CAPACITY_OPTIONS)[number];
 
 export interface LobbyMember {
@@ -45,7 +45,7 @@ export interface LobbyRoomSnapshot {
 	readonly members: LobbyMember[];
 	readonly chat: RoomChatMessage[];
 	readonly game?: GameState;
-	/** 当前这一步剩余的毫秒数（发送时）；超时自动处理，见 timeoutTurn。 */
+	/** 当前这一步（出牌、大臣留牌、结算画面）剩余的毫秒数（发送时）；超时自动处理，见 timeoutTurn。人机行动时没有。 */
 	readonly turnRemainingMs?: number;
 	/** 整轮结束后的「是否继续」投票；remainingMs 为发送时剩余的毫秒数。 */
 	readonly rematch?: RematchState;
@@ -115,6 +115,7 @@ export interface PublicRoomSummary {
 		readonly isHost: boolean;
 		readonly connected: boolean;
 		readonly bot?: boolean;
+		/** 钟情标记数。 */
 		readonly score?: number;
 		readonly isActive?: boolean;
 		readonly isWinner?: boolean;

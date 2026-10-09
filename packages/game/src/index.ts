@@ -1,18 +1,40 @@
 export * from "./types.js";
-export * from "./board.js";
+export * from "./cards.js";
 export {
-  advanceRunners,
+  actorOf,
   apply,
   applyCommand,
-  bustProbability,
   createGame,
   defaultConfig,
   legalActions,
-  moveOptions,
+  mustPlayCountess,
   redactGameForViewer,
+  targetChoices,
+  timeoutCommand,
   timeoutTurn,
+  timerKey,
+  timerSeconds,
+  unseenCounts,
+  visibleCounts,
 } from "./engine.js";
-export type { NewPlayer } from "./engine.js";
+export type { CreateOptions, Deal, NewPlayer, RedactOptions, TurnChooser } from "./engine.js";
+export {
+  SCENES,
+  SCENE_NAMES,
+  SCENE_NOTES,
+  TUTORIAL_DEAL,
+  TUTORIAL_PLAYERS,
+  TUTORIAL_SCRIPT,
+  createScene,
+  playSteps,
+  previewRoom,
+  previewSocketId,
+  scene,
+  scenePlayers,
+  seatId,
+  tutorialEndgame,
+} from "./scenes.js";
+export type { PreviewRoomOptions, SceneName, SceneOptions, SceneSpec, ScriptStep } from "./scenes.js";
 export { botCommand } from "./bot.js";
 export { createRng } from "./rng.js";
 export type { Rng } from "./rng.js";
