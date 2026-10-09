@@ -9,7 +9,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-import placeholders as ph  # 复用字体和 text()
+import simple as ph  # 复用字体和 text()
 
 ROOT = Path(__file__).resolve().parent.parent
 ART = ROOT / "apps" / "web" / "public" / "art"
