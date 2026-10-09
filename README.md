@@ -238,10 +238,26 @@ createScene({ hands: [["guard", "baron"]], protected: [1], discards: [[], ["hand
 | `scripts/sim-loveletter.ts` | 人机强度模拟：`npx tsx scripts/sim-loveletter.ts [局数]` |
 | `packages/game/test/` | 规则书用例、随机对局、隐藏信息、预览局面的测试；`acceptance/` 归规则核对，引擎不改 |
 | `apps/server` | Socket.IO 房间服务器和测试 |
-| `apps/web` | 网页（现在是调试牌桌，正式界面归界面阶段） |
+| `apps/web` | 网页：首页、等候房间、牌桌（见下面「界面」） |
 | `scripts/test-bot.mjs` | 陪玩脚本 |
 | `scripts/spy.mjs` | 抓包脚本：两个 socket 连真实服务器，查发给别人的数据里有没有不该有的东西 |
 | `art/` | 美术（归美术阶段） |
+
+## 界面（`apps/web`）
+
+| 文件 | 内容 |
+|---|---|
+| `src/GameBoard.tsx` | 牌桌：一圈座位（自己在最下面，对手按出牌顺序从左中绕到上排再到右中）、中央牌堆 / 移出区 / 记牌条、自己的手牌和操作区、侧栏的「记录 / 聊天」 |
+| `src/Dialogs.tsx` | 卫兵猜牌、大臣留牌、秘密结果（牧师看牌、男爵比牌、国王换牌只弹给当事人）、一小局结算、整场结束 |
+| `src/layout.ts` | 按牌桌实测尺寸挑摆法：手牌 2×/3×、打出区 1×/2×、记牌条 1×/2×、侧栏放不放得下；手机（<700）单独上下排 |
+| `src/Cards.tsx`、`src/art.ts` | 牌、小牌、图标、印章、精灵图和打出区扇形；美术文件地址（`public/art/`，尺寸见 `art/spec.md`） |
+| `src/describe.ts` | 事件文字（记录、「刚才」）和每张牌的效果说明 |
+| `src/GameRules.tsx` | 规则说明弹窗（自己的话 + 21 张牌参考） |
+| `src/App.tsx` | 首页（`HomeScreen`）、等候房间（`RoomScreen`）、连 socket |
+| `src/ll.css` | 牌桌、首页、等候房间的样式；`app-pixel.css` 是全站共用的像素皮肤（深红配色） |
+| `preview.html` + `src/preview.tsx` | 预览页（提交进仓库，不进生产构建）：`/preview.html?s=<场景>&n=<人数>`，场景是规则包 `SCENES` 的名字，外加 `crowded`、`home`、`home-rooms`、`waiting-1/full/bots/guest/2p`；参数 `v` 视角、`bots`/`auto`/`offline` 座位、`spec=1`（`all=1`）观战、`t` 倒计时、`chat=1`、`live=1` 别人的回合由人机自动走。教程和验收可以往里加场景，不要删别人的 |
+
+打一张牌：点手牌选中 → 要选人的牌点座位或名字按钮 → 卫兵在弹窗里猜牌 → 确认，三样收齐才发一条 `PLAY`。键盘 1 / 2 选牌、空格确认、Esc 取消。公主打出前弹像素确认框。女伯爵强制时国王 / 王子变暗并说明原因；不能选的座位变暗并写「侍女保护中」「已出局」。
 
 ## 画面：白天版和夜间版
 

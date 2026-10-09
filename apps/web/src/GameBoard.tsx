@@ -614,7 +614,7 @@ function Seat({ player, member, game, layout, area, fresh, choosable, blocked, c
       className={className}
       data-tutorial={`seat-${player.id}`}
       data-area={area}
-      style={{ "--seat-color": seatHex(player.seat), width: seatW } as CSSProperties}
+      style={{ "--seat-color": seatHex(player.seat), minWidth: seatW, maxWidth: seatW !== undefined ? Math.round(seatW * 1.35) : undefined } as CSSProperties}
       onClick={choosable || blocked ? onPick : undefined}
       role={choosable ? "button" : undefined}
       tabIndex={choosable ? 0 : undefined}

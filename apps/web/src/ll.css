@@ -67,7 +67,7 @@
   --rim: #7a3540;
   position: relative;
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 0;
   box-sizing: border-box;
   flex-direction: column;
   gap: 6px;
@@ -210,7 +210,7 @@
 .ll-hand-card.selected img { box-shadow: 0 0 0 calc(var(--px) * 2) #fff2b8, 0 0 0 calc(var(--px) * 3) var(--gold); }
 .ll-hand-card.blocked img { filter: grayscale(0.8) brightness(0.55); }
 .ll-hand-card.blocked { cursor: not-allowed; }
-.ll-card-note { position: absolute; left: 50%; bottom: 10px; padding: 2px 6px; color: #ffd8d0; background: #6e1020; font-size: 12px; line-height: 18px; white-space: nowrap; transform: translateX(-50%); }
+.ll-card-note { position: absolute; left: 50%; top: 46%; padding: 2px 6px; color: #ffd8d0; background: #6e1020; font-size: 12px; line-height: 18px; white-space: nowrap; transform: translateX(-50%); }
 .ll-card-note.sel { color: #2a1c06; background: var(--gold); }
 .ll-hand-card kbd { position: absolute; right: 6px; bottom: 6px; padding: 0 4px; color: #2a1c06; background: var(--gold); font: inherit; font-size: 12px; line-height: 16px; }
 
@@ -376,7 +376,7 @@
 @keyframes ll-petal { from { transform: translateY(0); } to { transform: translateY(640px); } }
 
 /* ---------- 规则说明 ---------- */
-.app-shell .gm-panel.ll-rules { --rim: var(--gold-2); width: min(820px, 100%); max-height: calc(100dvh - 48px); overflow-y: auto; text-align: left; }
+.app-shell .gm-panel.ll-rules { --rim: var(--gold-2); width: min(1040px, 100%); max-height: calc(100dvh - 48px); overflow-y: auto; text-align: left; }
 .ll-rules .game-rules-block + .game-rules-block { margin-top: 12px; }
 .app-shell .ll-rules .game-rules-block h3 { margin: 0 0 4px; color: var(--gold); font-family: inherit; font-size: 24px; font-weight: 400; }
 .app-shell .ll-rules .game-rules-block :is(p, li) { margin: 0; color: var(--text); font-size: 12px; line-height: 1.7; }
@@ -424,7 +424,6 @@
 .ll-screen.mobile .ll-seat { width: auto; }
 .ll-screen.mobile .ll-seat-body { min-height: 44px; }
 .ll-screen.mobile .ll-side { min-height: 280px; }
-.ll-screen.mobile .ll-status { display: none; }
 .ll-screen.mobile .ll-tip { width: 200px; }
 
 /* 手机上的弹窗：边距收紧，猜牌 4 列小牌 1× */
@@ -595,3 +594,7 @@
   .ll-fan-card.fresh, .ll-timer.low, .ll-seat.active, .ll-me.active .ll-me-info, .ll-sprite.loop, .ll-petals > span, .ll-plus { animation: none; }
   .ll-sprite.once { animation: none; background-position: var(--last) 0; }
 }
+
+/* 确认框（解散、打出公主）：按钮字 24px */
+.app-shell .gm-confirm { width: min(440px, 100%); }
+.app-shell .gm-confirm .gm-panel-actions .quiet-button { min-height: 44px; padding: 0 16px; font-size: 24px; white-space: nowrap; }
