@@ -331,7 +331,7 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
         </div>
         {game.faceUp.length > 0 && (
           <div className="ll-faceup" data-tutorial="face-up" title="2 人局开局面朝上移出的 3 张：谁都不会拿到">
-            <span className="ll-faceup-cards">{game.faceUp.map((role, index) => <Card key={index} role={role} scale={1} />)}</span>
+            <span className="ll-faceup-cards">{game.faceUp.map((role, index) => (layout.mobile ? <Mini key={index} role={role} scale={1} /> : <Card key={index} role={role} scale={1} />))}</span>
             <small>明牌移出</small>
           </div>
         )}
@@ -484,7 +484,7 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
       </div>
 
       {myTurn && !autoPlaying && game.stage === "chancellor" && (
-        <ChancellorDialog key={game.version} hand={me.hand} scale={layout.mobile ? 1 : 2} onSubmit={send} />
+        <ChancellorDialog key={game.version} hand={me.hand} scale={layout.mobile ? 1 : layout.hand} onSubmit={send} />
       )}
       {sel?.card === "guard" && sel.target && canPlay && (
         <GuessDialog
@@ -496,7 +496,7 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
           onCancel={() => setSel({ index: sel.index, card: sel.card })}
         />
       )}
-      {reveal && <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={layout.mobile ? 1 : 2} onClose={() => setReveal(null)} />}
+      {reveal && <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={layout.mobile ? 1 : layout.hand} onClose={() => setReveal(null)} />}
       {!reveal && game.lastRound && game.phase !== "playing" && !resultHidden && (
         <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} />
       )}

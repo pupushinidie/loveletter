@@ -240,7 +240,7 @@
 }
 .app-shell .ll-target small { color: var(--muted); font-size: 12px; }
 .app-shell .ll-target:hover:not(:disabled) { background: #45202a; }
-.app-shell .ll-target.selected { --rim: #fff2b8; color: #2a1c06; background: var(--gold); }
+.app-shell .ll-target.selected, .app-shell .ll-target.selected:hover:not(:disabled) { --rim: #fff2b8; color: #2a1c06; background: var(--gold); }
 .app-shell .ll-target:disabled { cursor: not-allowed; opacity: 0.5; }
 .ll-action-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
 .app-shell .ll-action-buttons :is(.primary-button, .quiet-button) { width: auto; min-height: 44px; margin: 0; padding: 0 16px; font-size: 24px; white-space: nowrap; }
@@ -376,7 +376,7 @@
 @keyframes ll-petal { from { transform: translateY(0); } to { transform: translateY(640px); } }
 
 /* ---------- 规则说明 ---------- */
-.app-shell .gm-panel.ll-rules { --rim: var(--gold-2); width: min(1040px, 100%); max-height: calc(100dvh - 48px); overflow-y: auto; text-align: left; }
+.app-shell .gm-panel.ll-rules { --rim: var(--gold-2); width: min(880px, 100%); white-space: normal; max-height: calc(100dvh - 48px); overflow-y: auto; text-align: left; }
 .ll-rules .game-rules-block + .game-rules-block { margin-top: 12px; }
 .app-shell .ll-rules .game-rules-block h3 { margin: 0 0 4px; color: var(--gold); font-family: inherit; font-size: 24px; font-weight: 400; }
 .app-shell .ll-rules .game-rules-block :is(p, li) { margin: 0; color: var(--text); font-size: 12px; line-height: 1.7; }
@@ -388,7 +388,7 @@
 .ll-ref b { color: var(--gold); font-size: 24px; font-weight: 400; line-height: 1.1; }
 .ll-ref b small { margin-left: 6px; color: var(--muted); font-size: 12px; }
 .ll-ref em { color: var(--text); font-size: 12px; font-style: normal; line-height: 1.5; }
-.ll-rules .gm-panel-actions { margin-top: 16px; }
+.ll-rules .gm-panel-actions { position: sticky; bottom: -22px; margin: 16px 0 -22px; padding: 10px 0 14px; background: var(--panel); }
 .app-shell .ll-rules .gm-panel-actions .primary-button { width: auto; min-height: 44px; margin: 0; padding: 0 20px; font-size: 24px; }
 
 /* ---------- 手机：上下排，可以往下滚一点 ---------- */
@@ -598,3 +598,5 @@
 /* 确认框（解散、打出公主）：按钮字 24px */
 .app-shell .gm-confirm { width: min(440px, 100%); }
 .app-shell .gm-confirm .gm-panel-actions .quiet-button { min-height: 44px; padding: 0 16px; font-size: 24px; white-space: nowrap; }
+/* 规则弹窗、房间设置浮层挂在顶栏里，顶栏是 nowrap：这里恢复换行 */
+.app-shell .ll-topbar :is(.gm-modal-backdrop, .game-room-popover) { white-space: normal; }

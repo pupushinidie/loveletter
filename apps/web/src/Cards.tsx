@@ -83,7 +83,7 @@ export function Fan({ entries, scale, maxWidth, fresh = 0, mini = false, empty }
 }) {
   const w = (mini ? MINI_W : CARD_W) * scale;
   const h = (mini ? MINI_H : CARD_H) * scale;
-  const base = mini ? 20 * scale : fanStep(scale);
+  const base = mini ? 24 * scale : fanStep(scale);
   const n = entries.length;
   let step = base;
   if (maxWidth !== undefined && n > 1 && w + (n - 1) * step > maxWidth) step = Math.max(12, Math.floor((maxWidth - w) / (n - 1)));
