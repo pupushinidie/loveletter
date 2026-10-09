@@ -89,11 +89,11 @@ BASE_PATH=/loveletter/ npm run build
 ## 超时、托管和离线
 
 - **每一步限时 30 秒**：出牌（打哪张 + 选谁 + 猜什么是一个命令）是一步；打出大臣后留牌是另一步，重新计 30 秒。没有轮外操作，计时只在换人或换步骤时重置。
-- **超时**：系统替他把**这一回合走完**（出牌、选人、猜牌，打出大臣还要留牌），整个回合只记 1 次超时，事件里第一条是 `TurnTimedOut`。现在用的是补充文件第四节的固定动作（`timeoutCommand`）：不打公主；被女伯爵强制就打女伯爵，否则打点数小的；卫兵、牧师、男爵、国王选下家开始第一个能选的人；卫兵猜「还没露面最多」的角色（一样多猜点数大的）；王子选下家开始第一个能选的对手，没有对手才选自己；大臣留点数最大的，另外的从大到小放回（最小的在最底下）。
+- **超时**：由**人机**替他把**这一回合走完**（出牌、选人、猜牌，打出大臣还要留牌；服务器调 `timeoutTurn(game, botCommand)`，人机只拿他的裁剪视角），整个回合只记 1 次超时，事件里第一条是 `TurnTimedOut`。人机给不出合法命令时（不应该发生）退回补充文件第四节的固定动作（`timeoutCommand`）：不打公主；被女伯爵强制就打女伯爵，否则打点数小的；卫兵、牧师、男爵、国王选下家开始第一个能选的人；卫兵猜「还没露面最多」的角色（一样多猜点数大的）；王子选下家开始第一个能选的对手，没有对手才选自己；大臣留点数最大的，另外的从大到小放回（最小的在最底下）。
 - **连续 2 次超时转托管**（全站约定）：托管就是人机代打，直到他自己动一下或点「取消托管」。
 - **离线**：轮到离线的人时先等 3 秒，然后由人机代打（不算超时）；用原昵称加房间码回来就交还座位。
 - 结算画面到点就开下一局，不算谁超时。
-- 人机：房主在等候房间点「加人机」（咕噜一号到五号），人机现在是**随机占位**（`botCommand` 从合法行动里随机挑），人机阶段会换成正式策略。
+- 人机：房主在等候房间点「加人机」（咕噜一号到五号），只有「普通」一档：记牌（还没露面的牌、牧师看到的、国王换到的、男爵平手、大臣放回去的牌被谁抽到）、给每个打法算分、最后一回合直接算比牌胜率，不打公主、女伯爵被迫就打。策略和强度见 `packages/game/src/bot.ts` 开头的注释和 `scripts/sim-loveletter.ts`。
 
 ## 对外接口（`packages/game`，界面、人机、教程、验收都用）
 
@@ -160,9 +160,10 @@ BASE_PATH=/loveletter/ npm run build
 | `targetChoices(state, actorId, card)` | 打这张牌能选谁（下家开始的座位顺序；王子把自己放最后） |
 | `mustPlayCountess(hand)` | 女伯爵强制 |
 | `visibleCounts(state)` / `unseenCounts(state, viewerId)` | 本小局公开的牌各几张 / 从某座位看还没露面的各几张（界面的剩余张数统计、人机记牌） |
-| `botCommand(view, playerId, random?)` | 人机（现在是随机占位），只吃裁剪后的视角 |
+| `botCommand(view, playerId, random?)` | 人机这一步的命令，只吃裁剪后的视角（给完整状态会报错） |
+| `botHint(view, playerId, random?)` / `botDecision` | 返回 `{ command, reason }`：人机会怎么打、一句第二人称的理由（教程「提示」按钮用）。理由会提到牧师看到的牌，**只在本人浏览器里算、只给本人看**，不要发到服务器、聊天或日志 |
 
-**人机阶段怎么接**：把正式策略写进 `bot.ts` 的 `botCommand`；超时也想用人机时，把服务器 `expireTurn` 里的 `timeoutTurn(room.game)` 改成 `timeoutTurn(room.game, botCommand)`（`choose` 只拿到裁剪视角，不合法会自动退回固定动作）。
+**人机怎么接的**：服务器的人机座位、托管、离线代打都调 `botCommand(redactGameForViewer(game, 座位), 座位)`；超时调 `timeoutTurn(room.game, botCommand)`。
 
 ### 预览局面工厂（`scenes.ts`）
 
@@ -233,7 +234,8 @@ createScene({ hands: [["guard", "baron"]], protected: [1], discards: [[], ["hand
 | `packages/game/src/types.ts` | 状态、命令、事件、结算的类型（字段注释写了谁能看） |
 | `packages/game/src/engine.ts` | 规则引擎、合法行动、超时、隐藏信息裁剪、开局 |
 | `packages/game/src/scenes.ts` | 预览局面工厂、教程剧本、`previewRoom` |
-| `packages/game/src/bot.ts` | 人机（人机阶段的文件，现在是随机占位） |
+| `packages/game/src/bot.ts`、`bot-knowledge.ts` | 人机策略（打分、理由）和记牌；`bot-baselines.ts` 是测强度用的随机和「保守打低」基线 |
+| `scripts/sim-loveletter.ts` | 人机强度模拟：`npx tsx scripts/sim-loveletter.ts [局数]` |
 | `packages/game/test/` | 规则书用例、随机对局、隐藏信息、预览局面的测试；`acceptance/` 归规则核对，引擎不改 |
 | `apps/server` | Socket.IO 房间服务器和测试 |
 | `apps/web` | 网页（现在是调试牌桌，正式界面归界面阶段） |

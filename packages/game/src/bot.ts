@@ -50,6 +50,9 @@ export const BOT_PARAMS = {
   bias: { higher: 3, same: 2, lower: 1 },
   /** 后半局系数：还能轮到几回合以内算「后半局」（补充 1.5 是 3）。 */
   horizon: 3,
+  /** 大臣放回牌堆底：大牌放到自己会抽到的位置、别给对手（乘点数；中途常被王子、大臣打乱，所以给得小）。 */
+  orderMine: 0.12,
+  orderOther: 0.08,
 };
 
 export type BotParams = typeof BOT_PARAMS;
@@ -164,6 +167,8 @@ function keepNet(ctx: Ctx, card: Role, knowers: ReadonlySet<string>, deckCount =
 }
 
 function lead(ctx: Ctx, opp: Player): number {
+  // 只剩我们俩：淘汰他 = 我赢这一局，我出局 = 他赢这一局，两边一样重，不再按领先加权
+  if (ctx.alive === 2) return 1;
   const target = ctx.view.config.tokensToWin;
   return 1 + 0.15 * Math.max(0, opp.tokens - ctx.me.tokens) + (opp.tokens >= target - 1 ? 0.4 : 0);
 }
@@ -350,6 +355,9 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
 
   let gain = 0;
   let pDie = 0;
+  /** 2 人局里这一下就把对手淘汰、直接赢下这一局的概率（这时留下哪张已经无所谓）。 */
+  let pEnd = 0;
+  const lastOpponent = ctx.alive === 2;
   let keep = keepNet(ctx, kept, knowers);
   let reason = `留下${keptText}，打掉${N(card)}。`;
   /** 理由是「留下哪张」这类普通的，最后一回合换成比牌胜率。 */
@@ -371,6 +379,7 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       const guess = command.guess!;
       const p = d[guess];
       gain = p * elimValue(ctx, opp);
+      if (lastOpponent) pEnd = p;
       if (p >= 0.999) reason = `${howKnown(ctx, opp.id)}，${who}手里是${N(guess)}：卫兵点他、猜${N(guess)}，一定中。`;
       else reason = `猜${who}是${N(guess)}：${N(guess)}还有 ${ctx.unseen[guess]} 张没露面，猜中的机会约 ${pct(p)}。`;
       break;
@@ -410,6 +419,7 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       }
       gain = win * elimValue(ctx, opp);
       pDie = lose;
+      if (lastOpponent) pEnd = win;
       if (tie > 0) keep = (1 - tie) * keep + tie * keepNet(ctx, kept, new Set([...knowers, opp.id]));
       if (win >= 0.999) reason = `${howKnown(ctx, opp.id)}${who}的牌比你的${keptText}小，男爵比牌必赢。`;
       else if (lose >= 0.999) reason = `${who}的牌比你大，可也没有更好的打法了。`;
@@ -445,6 +455,7 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       if (!opp || !d) break;
       const princess = d.princess;
       gain = princess * elimValue(ctx, opp);
+      if (lastOpponent) pEnd = princess;
       const theirs = expectedValue(d, "princess");
       const fresh = expectedValue(ctx.pool);
       gain += (1 - princess) * ctx.t * P.princeStrength * (theirs - fresh) * lead(ctx, opp);
@@ -494,10 +505,11 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       break;
   }
 
-  let score = gain + (1 - pDie) * keep - pDie * P.self;
+  let score = gain + (1 - pDie - pEnd) * keep - pDie * P.self;
   if (ctx.final) {
     const equity = finalEquity(ctx, command, kept);
-    score = 10 * equity;
+    // 同样是输，宁可比牌输也不把自己送出局（还留着间谍分的可能，看起来也不傻）
+    score = 10 * equity - pDie;
     if (plain) {
       const spyNow = card === "spy" && !ctx.me.spy && !ctx.opps.some((player) => player.spy);
       reason = spyNow
@@ -520,7 +532,7 @@ function scoreChancellor(view: GameState, meId: string, params: BotParams, comma
   command.bottom.forEach((card, offset) => {
     const index = after - command.bottom.length + offset;
     const mine = index % ctx.alive === ctx.alive - 1;
-    order += mine ? 0.5 * V(card) : -0.25 * V(card);
+    order += mine ? params.orderMine * V(card) : -params.orderOther * V(card);
   });
   // 一样的时候把点数小的放最底下
   const last = command.bottom.at(-1);
@@ -541,6 +553,15 @@ function pick(candidates: Candidate[], random: () => number, tolerance: number):
   const slack = Math.max(tolerance * Math.abs(best.score), 0.05);
   const near = candidates.filter((candidate) => candidate.score >= best.score - slack);
   return near[Math.min(near.length - 1, Math.floor(random() * near.length))] ?? best;
+}
+
+/** 调试和调参用：这一步每个打法的分数和理由（不从 index 导出）。 */
+export function botCandidates(view: GameState, playerId: string, params: BotParams = BOT_PARAMS): Candidate[] {
+  const actions = legalActions(view, playerId);
+  if (view.phase !== "playing" || actions.length === 0) return [];
+  if (view.stage === "chancellor") return actions.map((command) => scoreChancellor(view, playerId, params, command as ChancellorCommand));
+  const ctx = makeCtx(view, playerId, params);
+  return actions.map((command) => scorePlay(ctx, command as PlayCommand));
 }
 
 /**

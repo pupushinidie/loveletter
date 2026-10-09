@@ -393,3 +393,12 @@ describe("所有角色都考虑过", () => {
     }
   });
 });
+
+describe("最后一回合不自杀", () => {
+  it("牌堆抽完、手里公主 + 国王：打国王（比牌输也比打公主出局强）", () => {
+    for (const players of [2, 3]) {
+      const s = createScene({ players, hands: [["princess", "king"]], deck: [], leftovers: "discards", setAside: "baron" });
+      always(s, "p1", (c) => c.type === "PLAY" && c.card === "king", 10);
+    }
+  });
+});
