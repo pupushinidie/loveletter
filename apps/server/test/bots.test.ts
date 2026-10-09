@@ -1,5 +1,5 @@
 import { AddressInfo } from "node:net";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { io as createClient, type Socket } from "socket.io-client";
 import {
   actorOf,
@@ -33,9 +33,11 @@ const SOLO_CAPACITY: Capacity = 4;
 const FULL_TEST_CAPACITY: Capacity = 3;
 // ----------------------------------------
 
-// 人机立刻行动、每一步 300 ms 超时，测试才跑得快（服务端在导入时读这两个变量）。
+// 人机立刻行动、每一步 300 ms 超时、真人全离线 800 ms 关房，测试才跑得快（服务端在导入时读这些变量）。
+// 最后一组测试会用 BOT_DELAY_SCALE=1 另起一个服务器实例，量离线等 3 秒。
 process.env.BOT_DELAY_SCALE = "0";
 process.env.TURN_MS = "300";
+process.env.ROOM_ABANDON_MS = "800";
 
 
 type TestSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -173,9 +175,17 @@ describe("人机", () => {
     expect(names.slice(1)).toEqual(["咕噜一号", "咕噜二号", "咕噜三号", "咕噜四号"].slice(0, SOLO_CAPACITY - 1));
 
     expect((await start(host)).ok).toBe(true);
+    // 人机的理由文案（会提到牧师看到的牌）不能发给任何人
+    let leakedReason = false;
+    const watchReason = (room: LobbyRoomSnapshot) => {
+      if (/"reason"\s*:\s*"[^"]*[\u4e00-\u9fa5]/.test(JSON.stringify(room)) || room.chat.some((message) => message.name.startsWith("咕噜"))) leakedReason = true;
+    };
+    host.on("room:updated", watchReason);
     const stop = autoplay(host);
     const finished = await updateWhere(host, (snapshot) => snapshot.game?.phase === "finished", 60_000);
     stop();
+    host.off("room:updated", watchReason);
+    expect(leakedReason).toBe(false);
     const bots = finished.members.filter((member) => member.bot).map((member) => member.id);
     expect(finished.rematch?.acceptedIds.sort()).toEqual(bots.sort());
 
@@ -192,6 +202,20 @@ describe("人机", () => {
     expect((await lobby(host)).some((candidate) => candidate.players[0]?.name === hostName)).toBe(true);
     expect((await call<void>((ack) => host.emit("room:leave", ack))).ok).toBe(true);
     expect((await lobby(host)).some((candidate) => candidate.players.some((player) => player.name === hostName))).toBe(false);
+  });
+
+  it("对局中真人全都离线：人机接着打，没人回来就关房", async () => {
+    const host = await connect();
+    const hostName = nick("走人");
+    await create(host, hostName, 3);
+    expect((await addBot(host)).ok).toBe(true);
+    expect((await addBot(host)).ok).toBe(true);
+    expect((await start(host)).ok).toBe(true);
+    const watcher = await connect();
+    expect((await lobby(watcher)).some((candidate) => candidate.players[0]?.name === hostName)).toBe(true);
+    host.disconnect();
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    expect((await lobby(watcher)).some((candidate) => candidate.players.some((player) => player.name === hostName))).toBe(false);
   });
 
   it("连续超时两次转托管，由人机代打；取消托管后交还", async () => {
@@ -240,4 +264,64 @@ describe("人机", () => {
     expect(rejoined.ok && rejoined.data.members.find((member) => member.id === back.id)).toMatchObject({ playerId: leaverSeat, connected: true });
     stop();
   }, 30_000);
+});
+
+// 真实停顿（BOT_DELAY_SCALE=1）另起一个服务器实例：离线的人轮到时先等 3 秒再由人机代打
+describe("人机（真实停顿）", () => {
+  let slowUrl = "";
+  let slowHttp: typeof import("../src/index.js").httpServer;
+  let slowIo: typeof import("../src/index.js").io;
+
+  beforeAll(async () => {
+    process.env.BOT_DELAY_SCALE = "1";
+    process.env.TURN_MS = "20000";
+    vi.resetModules();
+    const serverModule = await import("../src/index.js");
+    slowHttp = serverModule.httpServer;
+    slowIo = serverModule.io;
+    await new Promise<void>((resolve, reject) => {
+      slowHttp.once("error", reject);
+      slowHttp.listen(0, resolve);
+    });
+    slowUrl = `http://127.0.0.1:${(slowHttp.address() as AddressInfo).port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve) => slowIo.close(() => resolve()));
+  });
+
+  it("离线的人轮到时等满 3 秒才由人机代打（不算超时），回来后座位交还", async () => {
+    const saved = serverUrl;
+    serverUrl = slowUrl;
+    try {
+      const leaver = await connect();
+      const stayer = await connect();
+      const leaverName = nick("断线");
+      const { code } = await create(leaver, leaverName, 2);
+      expect((await call<LobbyRoomSnapshot>((ack) => stayer.emit("room:join", { name: nick("等人"), code }, ack))).ok).toBe(true);
+      const started = await start(leaver);
+      if (!started.ok) throw new Error(started.error);
+      const leaverSeat = started.data.members.find((member) => member.id === leaver.id)!.playerId;
+      const stop = autoplay(stayer);
+      // 等到轮到要掉线的人（他自己还在线，不会被人机抢先）
+      await updateWhere(stayer, (snapshot) => snapshot.game?.phase === "playing" && actorOf(snapshot.game) === leaverSeat, 15_000);
+      const turnVersion = latest.get(stayer)!.game!.version;
+      const offlineAt = Date.now();
+      leaver.disconnect();
+      const played = await updateWhere(stayer, (snapshot) => (snapshot.game?.version ?? 0) > turnVersion && actedBy(snapshot, leaverSeat), 15_000);
+      const waited = Date.now() - offlineAt;
+      expect(waited).toBeGreaterThanOrEqual(2_900);
+      expect(waited).toBeLessThan(8_000);
+      expect(played.game!.events.some((event) => event.type === "TurnTimedOut")).toBe(false);
+      expect(played.members.find((member) => member.playerId === leaverSeat)).toMatchObject({ connected: false });
+
+      const back = await connect();
+      const rejoined = await call<LobbyRoomSnapshot>((ack) => back.emit("room:join", { name: leaverName, code }, ack));
+      expect(rejoined.ok && rejoined.data.members.find((member) => member.id === back.id)).toMatchObject({ playerId: leaverSeat, connected: true, name: leaverName });
+      expect(rejoined.ok && rejoined.data.members.find((member) => member.id === back.id)?.auto).toBeFalsy();
+      stop();
+    } finally {
+      serverUrl = saved;
+    }
+  }, 40_000);
 });

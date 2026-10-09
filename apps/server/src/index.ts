@@ -500,8 +500,8 @@ function expireTurn(room: RoomState): void {
     room.timeouts.set(playerId, count);
     if (count >= AUTO_AFTER_TIMEOUTS) setAuto(room, playerId, true);
   }
-  // 超时：替他走完整个回合（现在是引擎里的固定动作；人机阶段可以换成 timeoutTurn(room.game, botCommand)）
-  room.game = timeoutTurn(room.game);
+  // 超时：由人机替他走完整个回合（只吃他的裁剪视角，只记 1 次超时；人机给不出合法命令时退回固定动作）
+  room.game = timeoutTurn(room.game, botCommand);
   afterGameChange(room);
   emitRoomUpdate(room);
 }
