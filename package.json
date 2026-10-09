@@ -1,0 +1,24 @@
+{
+  "name": "loveletter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build:game": "npm run build -w @loveletter/game",
+    "test": "vitest run",
+    "typecheck": "tsc -b && npm run typecheck -w @loveletter/server && npm run typecheck -w @loveletter/web",
+    "predev": "npm run build:game",
+    "dev": "concurrently -k -n server,web \"npm:dev:server\" \"npm:dev:web\"",
+    "start": "npm run build:game && npm run start -w @loveletter/server",
+    "dev:server": "npm run dev -w @loveletter/server",
+    "dev:web": "npm run dev -w @loveletter/web",
+    "build": "npm run build:game && npm run build -w @loveletter/web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3",
+    "tsx": "^4.20.5",
+    "vitest": "^3.2.4"
+  }
+}
