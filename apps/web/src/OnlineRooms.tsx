@@ -1,5 +1,6 @@
 import type { PublicRoomSummary } from "@loveletter/game";
 import AdminBar, { adminEntryEnabled, useAdminToken } from "./AdminBar.js";
+import { useConfirm } from "./confirm.js";
 import { socket } from "./socket.js";
 
 const statusLabels: Record<PublicRoomSummary["status"], string> = {
@@ -20,10 +21,12 @@ function OnlineRooms({ rooms, connected, busy, onJoin }: {
     0,
   );
   const admin = useAdminToken();
+  const [confirm, confirmDialog] = useConfirm();
 
-  function dissolve(room: PublicRoomSummary) {
+  async function dissolve(room: PublicRoomSummary) {
     const names = room.players.map((player) => player.name).join("、");
-    if (!window.confirm(`确定解散这个房间吗？（${names}）所有玩家都会被移出。`)) return;
+    const ok = await confirm({ title: "解散这个房间？", detail: `${names}：所有玩家都会被移出。`, confirmLabel: "解散" });
+    if (!ok) return;
     admin.setError("");
     socket.emit("admin:dissolve", { roomId: room.id, token: admin.token }, (response) => {
       if (!response.ok) admin.setError(response.error);
@@ -86,7 +89,7 @@ function OnlineRooms({ rooms, connected, busy, onJoin }: {
                 );
               })()}
               {admin.token && (
-                <button className="admin-dissolve" type="button" onClick={() => dissolve(room)}>解散房间</button>
+                <button className="admin-dissolve" type="button" onClick={() => void dissolve(room)}>解散房间</button>
               )}
             </article>
           ))}
@@ -95,6 +98,7 @@ function OnlineRooms({ rooms, connected, busy, onJoin }: {
         <p className="online-rooms-empty">现在还没有房间，创建一间邀请朋友吧。</p>
       )}
       <p className="online-rooms-note">这里不显示房间码。房主设为公开的房间可以直接加入，允许观战的房间可以进去看。</p>
+      {confirmDialog}
     </section>
   );
 }

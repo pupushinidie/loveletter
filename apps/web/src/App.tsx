@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CAPACITY_OPTIONS, type Capacity, type GameCommand, type LobbyRoomSnapshot, type PublicRoomSummary } from "@loveletter/game";
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { CAPACITY_OPTIONS, ROLE_COUNT, ROLE_NAME, ROLES, type Capacity, type GameCommand, type LobbyRoomSnapshot, type PublicRoomSummary } from "@loveletter/game";
+import { art, seatHex } from "./art.js";
+import { Card, Mini, RoleTip } from "./Cards.js";
 import { useConfirm } from "./confirm.js";
 import GameBoard from "./GameBoard.js";
 import GameRules from "./GameRules.js";
@@ -7,7 +9,7 @@ import OnlineRooms from "./OnlineRooms.js";
 import RoomChat from "./RoomChat.js";
 import { roomRole, RoomSettingsPanel, SeatSwitch } from "./RoomExtras.js";
 import { socket } from "./socket.js";
-import { ThemeToggle, useTheme } from "./theme.js";
+import { ThemeToggle, useTheme, type Theme } from "./theme.js";
 import { useVoice } from "./voice.js";
 
 type EntryMode = "create" | "join";
@@ -149,7 +151,7 @@ function App() {
         return;
       }
       setRoom(response.data);
-      setNotice("对局已开始，祝你好运。" );
+      setNotice("");
     });
   }
 
@@ -163,7 +165,7 @@ function App() {
       }
       setRoom(null);
       setError("");
-      setNotice("已离开房间。" );
+      setNotice("已离开房间。");
     });
   }
 
@@ -206,9 +208,9 @@ function App() {
     if (!room) return;
     try {
       await navigator.clipboard.writeText(room.code);
-      setNotice("房间码已复制。" );
+      setNotice("房间码已复制。");
     } catch {
-      setNotice("请手动复制房间码。" );
+      setNotice("请手动复制房间码。");
     }
   }
 
@@ -225,6 +227,7 @@ function App() {
           brand={<Brand />}
           connection={<ConnectionStatus connected={connected} />}
           themeToggle={themeToggle}
+          theme={theme}
           chat={<RoomChat room={room} voice={voice} />}
           onCommand={submitGameCommand}
           onRematch={voteRematch}
@@ -241,165 +244,206 @@ function App() {
 
   if (room) {
     return (
-      <main className="app-shell">
-        <header className="topbar">
-          <Brand />
-          <div className="topbar-right">
-            {themeToggle}
-            <ConnectionStatus connected={connected} />
-          </div>
-        </header>
-        <GameRules />
-        <RoomView
-          room={room}
-          busy={busy}
-          error={error}
-          notice={notice}
-          onCopyCode={copyRoomCode}
-          onLeave={leaveRoom}
-          onStart={startGame}
-          onKick={kickMember}
-          onAddBot={addBot}
-          onDissolve={dissolveRoom}
-        />
-        <RoomChat room={room} voice={voice} />
-        <footer className="page-footer">把心意送到公主手里。</footer>
-        {confirmDialog}
-      </main>
+      <RoomScreen
+        room={room}
+        busy={busy}
+        error={error}
+        notice={notice}
+        connected={connected}
+        themeToggle={themeToggle}
+        chat={<RoomChat room={room} voice={voice} />}
+        onCopyCode={copyRoomCode}
+        onLeave={leaveRoom}
+        onStart={startGame}
+        onKick={kickMember}
+        onAddBot={addBot}
+        onDissolve={dissolveRoom}
+        dialog={confirmDialog}
+      />
     );
   }
 
   return (
-    <main className="app-shell">
+    <HomeScreen
+      theme={theme}
+      themeToggle={themeToggle}
+      connected={connected}
+      mode={mode}
+      onMode={(next) => { setMode(next); setError(""); }}
+      name={name}
+      onName={setName}
+      capacity={capacity}
+      onCapacity={setCapacity}
+      roomCode={roomCode}
+      onRoomCode={(value) => setRoomCode(normalizeRoomCode(value))}
+      canSubmit={canSubmit}
+      busy={busy}
+      error={error}
+      notice={notice}
+      onSubmit={handleSubmit}
+      lobbyRooms={lobbyRooms}
+      onJoinListed={joinListed}
+    />
+  );
+}
+
+/* ---------- 首页 ---------- */
+
+export interface HomeScreenProps {
+  theme: Theme;
+  themeToggle: ReactNode;
+  connected: boolean;
+  mode: EntryMode;
+  onMode: (mode: EntryMode) => void;
+  name: string;
+  onName: (name: string) => void;
+  capacity: Capacity;
+  onCapacity: (capacity: Capacity) => void;
+  roomCode: string;
+  onRoomCode: (code: string) => void;
+  canSubmit: boolean;
+  busy: boolean;
+  error: string;
+  notice: string;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  lobbyRooms: PublicRoomSummary[];
+  onJoinListed: (roomId: string, spectate: boolean) => void;
+}
+
+export function HomeScreen(props: HomeScreenProps) {
+  const { mode, busy, error, notice } = props;
+  return (
+    <main className="app-shell ll-home">
       <header className="topbar">
         <Brand />
         <div className="topbar-right">
           <a className="center-link" href={CENTER_URL}>← 游戏中心</a>
-          {themeToggle}
-          <ConnectionStatus connected={connected} />
+          <GameRules />
+          {props.themeToggle}
+          <ConnectionStatus connected={props.connected} />
         </div>
       </header>
 
       <section className="welcome-grid">
         <div className="welcome-copy">
-          <div className="eyebrow"><span className="eyebrow-line" /> 在线对战 · 2–6 人 · 测试版</div>
+          <div className="eyebrow"><span className="eyebrow-line" /> 在线对战 · 2–6 人 · 空座可以加人机</div>
           <h1>情书</h1>
           <p className="welcome-description">
             整副只有 21 张牌，每人手里只拿一张。轮到你时抽一张、打一张：猜别人的牌、偷看、比大小、换牌……
-            撑到最后，或者牌堆抽完时手里点数最大，就赢下这一小局。先攒够钟情标记的人获胜。
-            创建一间私人房间，或输入房间码加入朋友的对局；人不够可以加人机。
+            撑到最后，或者牌堆抽完时手里点数最大，就赢下这一小局。先攒够钟情标记的人赢得公主的心。
           </p>
+          <ul className="ll-home-points">
+            <li><b>抽</b>轮到你先抽一张，手里变成两张</li>
+            <li><b>打</b>打出一张、照它做：猜、看、比、换、护</li>
+            <li><b>撑</b>撑到最后或者点数最大，拿一枚钟情标记</li>
+          </ul>
+          <Hero theme={props.theme} />
         </div>
 
-        <section className="entry-card" aria-labelledby="entry-title">
-          <div className="entry-card-heading">
-            <div>
-              <span className="section-kicker">准备开始</span>
-              <h2 id="entry-title">进入牌桌</h2>
+        <div className="ll-home-side">
+          <section className="entry-card" aria-labelledby="entry-title">
+            <div className="entry-card-heading">
+              <div>
+                <span className="section-kicker">准备开始</span>
+                <h2 id="entry-title">进入宴会厅</h2>
+              </div>
+              <span className="step-indicator">01 <i /> 02</span>
             </div>
-            <span className="step-indicator">01 <i /> 02</span>
-          </div>
 
-          <div className="mode-switch" role="tablist" aria-label="选择房间操作">
-            <button
-              className={mode === "create" ? "mode-tab active" : "mode-tab"}
-              type="button"
-              role="tab"
-              aria-selected={mode === "create"}
-              onClick={() => { setMode("create"); setError(""); }}
-            >
-              创建房间
-            </button>
-            <button
-              className={mode === "join" ? "mode-tab active" : "mode-tab"}
-              type="button"
-              role="tab"
-              aria-selected={mode === "join"}
-              onClick={() => { setMode("join"); setError(""); }}
-            >
-              加入房间
-            </button>
-          </div>
+            <div className="mode-switch" role="tablist" aria-label="选择房间操作">
+              <button className={mode === "create" ? "mode-tab active" : "mode-tab"} type="button" role="tab" aria-selected={mode === "create"} onClick={() => props.onMode("create")}>
+                创建房间
+              </button>
+              <button className={mode === "join" ? "mode-tab active" : "mode-tab"} type="button" role="tab" aria-selected={mode === "join"} onClick={() => props.onMode("join")}>
+                加入房间
+              </button>
+            </div>
 
-          <form className="entry-form" onSubmit={handleSubmit}>
-            <label className="field-label" htmlFor="player-name">你的昵称</label>
-            <input
-              id="player-name"
-              className="text-input"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="输入 2–18 个字符"
-              minLength={2}
-              maxLength={18}
-              autoComplete="nickname"
-              required
-            />
+            <form className="entry-form" onSubmit={props.onSubmit}>
+              <label className="field-label" htmlFor="player-name">你的昵称</label>
+              <input
+                id="player-name"
+                className="text-input"
+                value={props.name}
+                onChange={(event) => props.onName(event.target.value)}
+                placeholder="输入 2–18 个字符"
+                minLength={2}
+                maxLength={18}
+                autoComplete="nickname"
+                required
+              />
 
-            {mode === "create" ? (
-              <>
-                <label className="field-label field-label-spaced" htmlFor="room-capacity">房间人数</label>
-                <div className="capacity-options capacity-many" id="room-capacity" role="group" aria-label="选择房间人数">
-                  {CAPACITY_OPTIONS.map((seats) => (
-                    <button
-                      key={seats}
-                      type="button"
-                      className={capacity === seats ? "capacity-option selected" : "capacity-option"}
-                      aria-pressed={capacity === seats}
-                      onClick={() => setCapacity(seats)}
-                    >
-                      <strong>{seats}</strong>
-                      <span>位玩家</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="field-hint">至少 2 位玩家后，房主即可开始；空座位可以加人机。</p>
-              </>
-            ) : (
-              <>
-                <label className="field-label field-label-spaced" htmlFor="room-code">房间码</label>
-                <input
-                  id="room-code"
-                  className="text-input room-code-input"
-                  value={roomCode}
-                  onChange={(event) => setRoomCode(normalizeRoomCode(event.target.value))}
-                  placeholder="例如：7KQ2TX"
-                  autoComplete="off"
-                  maxLength={6}
-                  required
-                />
-                <p className="field-hint">房间码为 6 位字母或数字，不含易混淆字符。掉线后用原昵称和房间码可回到进行中的对局。</p>
-              </>
-            )}
+              {mode === "create" ? (
+                <>
+                  <label className="field-label field-label-spaced" htmlFor="room-capacity">房间人数</label>
+                  <div className="capacity-options capacity-many" id="room-capacity" role="group" aria-label="选择房间人数">
+                    {CAPACITY_OPTIONS.map((seats) => (
+                      <button
+                        key={seats}
+                        type="button"
+                        className={props.capacity === seats ? "capacity-option selected" : "capacity-option"}
+                        aria-pressed={props.capacity === seats}
+                        onClick={() => props.onCapacity(seats)}
+                      >
+                        <strong>{seats}</strong>
+                        <span>位玩家</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="field-hint">3 人以上更好玩。至少 2 位玩家后房主就能开始，空座位可以加人机。</p>
+                </>
+              ) : (
+                <>
+                  <label className="field-label field-label-spaced" htmlFor="room-code">房间码</label>
+                  <input
+                    id="room-code"
+                    className="text-input room-code-input"
+                    value={props.roomCode}
+                    onChange={(event) => props.onRoomCode(event.target.value)}
+                    placeholder="例如：7KQ2TX"
+                    autoComplete="off"
+                    maxLength={6}
+                    required
+                  />
+                  <p className="field-hint">房间码为 6 位字母或数字，不含易混淆字符。掉线后用原昵称和房间码可回到进行中的对局。</p>
+                </>
+              )}
 
-            {error && <p className="feedback feedback-error" role="alert">{error}</p>}
-            {notice && <p className="feedback feedback-success" role="status">{notice}</p>}
+              {error && <p className="feedback feedback-error" role="alert">{error}</p>}
+              {notice && <p className="feedback feedback-success" role="status">{notice}</p>}
 
-            <button className="primary-button" type="submit" disabled={!canSubmit}>
-              {busy ? <><span className="spinner" /> 正在连接</> : mode === "create" ? "创建私人房间" : "加入牌桌"}
-              {!busy && <span aria-hidden="true">↗</span>}
-            </button>
-          </form>
-          <div className="entry-footnote"><span className="lock-icon">◇</span> 默认邀请制 · 房主可以设为公开</div>
-        </section>
+              <button className="primary-button" type="submit" disabled={!props.canSubmit}>
+                {busy ? <><span className="spinner" /> 正在连接</> : mode === "create" ? "创建私人房间" : "加入牌桌"}
+                {!busy && <span aria-hidden="true">↗</span>}
+              </button>
+            </form>
+            <div className="entry-footnote"><span className="lock-icon">◇</span> 默认邀请制 · 房主可以设为公开</div>
+          </section>
+          <OnlineRooms rooms={props.lobbyRooms} connected={props.connected} busy={busy} onJoin={props.onJoinListed} />
+        </div>
       </section>
-
-      <section className="how-it-works" aria-label="游戏流程">
-        <div className="how-item"><span className="how-number">01</span><span>创建或加入</span></div>
-        <span className="how-divider" />
-        <div className="how-item"><span className="how-number">02</span><span>等待朋友就位</span></div>
-        <span className="how-divider" />
-        <div className="how-item"><span className="how-number">03</span><span>开始对局</span></div>
-      </section>
-      <OnlineRooms rooms={lobbyRooms} connected={connected} busy={busy} onJoin={joinListed} />
-      <footer className="page-footer">把心意送到公主手里。</footer>
     </main>
+  );
+}
+
+/** 首页主图：宴会厅场景 + 扇开的几张牌。 */
+function Hero({ theme }: { theme: Theme }) {
+  const cards = ["guard", "priest", "princess", "king", "countess"] as const;
+  return (
+    <div className="ll-hero" style={{ backgroundImage: `url(${art.scene(theme === "day", 0)})` }}>
+      <div className="ll-showcase" aria-hidden="true">
+        {cards.map((role, index) => (
+          <span key={role} style={{ "--i": index } as CSSProperties}><Card role={role} scale={1} /></span>
+        ))}
+      </div>
+    </div>
   );
 }
 
 function Brand() {
   return (
     <a className="brand" href={import.meta.env.BASE_URL} aria-label="情书首页">
-      <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
+      <img className="brand-icon" src={art.icon("letter")} width={32} height={32} alt="" />
       <span className="brand-name">情书<span> LOVE LETTER</span></span>
     </a>
   );
@@ -414,39 +458,54 @@ function ConnectionStatus({ connected }: { connected: boolean }) {
   );
 }
 
-function RoomView({
-  room,
-  busy,
-  error,
-  notice,
-  onCopyCode,
-  onLeave,
-  onStart,
-  onKick,
-  onAddBot,
-  onDissolve,
-}: {
+/* ---------- 等候房间 ---------- */
+
+export interface RoomScreenProps {
   room: LobbyRoomSnapshot;
   busy: boolean;
   error: string;
   notice: string;
+  connected: boolean;
+  themeToggle: ReactNode;
+  chat: ReactNode;
   onCopyCode: () => void;
   onLeave: () => void;
   onStart: () => void;
   onKick: (memberId: string) => void;
   onAddBot: () => void;
   onDissolve: () => void;
-}) {
+  dialog?: ReactNode;
+}
+
+export function RoomScreen(props: RoomScreenProps) {
+  return (
+    <main className="app-shell ll-room">
+      <header className="topbar">
+        <Brand />
+        <div className="topbar-right">
+          <GameRules />
+          {props.themeToggle}
+          <ConnectionStatus connected={props.connected} />
+        </div>
+      </header>
+      <RoomView {...props} />
+      {props.dialog}
+    </main>
+  );
+}
+
+function RoomView({ room, busy, error, notice, onCopyCode, onLeave, onStart, onKick, onAddBot, onDissolve, chat }: RoomScreenProps) {
   const { isHost, spectating } = roomRole(room);
   const openSeats = Math.max(0, room.capacity - room.members.length);
+  const tokens = { 2: 6, 3: 5, 4: 4, 5: 3, 6: 3 }[room.capacity] ?? 4;
 
   return (
     <section className="room-layout">
       <div className="room-heading">
         <div>
-          <div className="eyebrow"><span className="eyebrow-line" /> {room.status === "waiting" ? "等待大厅" : "对局已创建"}</div>
-          <h1>{spectating ? "你在观战。" : room.status === "waiting" ? "牌桌准备中。" : "好戏即将开始。"}</h1>
-          <p>{spectating ? "等房主开始对局；有空座位时可以坐下一起玩。" : room.status === "waiting" ? "把房间码分享给朋友，等大家就位后开始。" : "对局马上开始。"}</p>
+          <div className="eyebrow"><span className="eyebrow-line" /> {room.status === "waiting" ? "等待大厅" : "对局已创建"} · 情书</div>
+          <h1>{spectating ? "你在观战。" : room.status === "waiting" ? "宴会厅准备中。" : "好戏即将开始。"}</h1>
+          <p>{spectating ? "等房主开始对局；有空座位时可以坐下一起玩。" : "把房间码分享给朋友，等大家就位后开始；空座位可以加人机。"}</p>
         </div>
         <div className="room-heading-actions">
           {isHost && <button className="quiet-button danger" type="button" onClick={onDissolve} disabled={busy}>解散房间</button>}
@@ -470,6 +529,19 @@ function RoomView({
             ) : (
               <div className="room-code-caption">从首页列表进来观战，看不到房间码</div>
             )}
+            <p className="ll-room-note" data-tutorial="room-note">
+              {room.capacity} 人局：先攒够 <b>{tokens}</b> 枚钟情标记的人赢。{room.capacity === 2 ? "2 人局也能玩，不过 3 人以上更好玩。" : "3 人以上更好玩。"}
+            </p>
+            <div className="panel-label ll-deck-label">21 张牌 <span>指着看效果</span></div>
+            <ul className="ll-deck-list">
+              {ROLES.map((role) => (
+                <li key={role} tabIndex={0}>
+                  <Mini role={role} />
+                  <span>{ROLE_NAME[role]}×{ROLE_COUNT[role]}</span>
+                  <RoleTip role={role} />
+                </li>
+              ))}
+            </ul>
           </section>
 
           <section className="room-panel player-panel">
@@ -480,10 +552,12 @@ function RoomView({
             <div className="player-list">
               {room.members.map((member, index) => (
                 <div className="player-row" key={member.id}>
-                  <div className={`player-avatar avatar-${(index % 4) + 1}`}>{member.name.slice(0, 1).toUpperCase()}</div>
+                  <div className="player-avatar ll-member-avatar" style={{ "--seat-color": seatHex(index) } as CSSProperties}>
+                    <img src={art.seal(index)} alt="" width={48} height={48} />
+                  </div>
                   <div className="player-details">
                     <strong>{member.name}{member.id === socket.id ? <small>你</small> : null}</strong>
-                    <span>{member.isHost ? "房主" : member.bot ? "人机 · 普通难度" : "已加入"}</span>
+                    <span>{member.isHost ? "房主" : member.bot ? "人机 · 普通难度" : member.connected ? "已加入" : "离线"}</span>
                   </div>
                   {member.isHost && <span className="host-badge">房主</span>}
                   {member.bot && <span className="bot-badge">人机</span>}
@@ -496,11 +570,11 @@ function RoomView({
                 <div className="player-row open-seat" key={`open-${index}`}>
                   <div className="empty-avatar"><span>＋</span></div>
                   <div className="player-details"><strong>等待玩家加入</strong><span>{room.access.open ? "公开房间，路过的人也能加入" : "分享房间码邀请朋友"}</span></div>
-                  {isHost && <button className="quiet-button add-bot-button" type="button" onClick={onAddBot} disabled={busy}>加人机</button>}
+                  {isHost && <button className="quiet-button add-bot-button" type="button" onClick={onAddBot} disabled={busy} data-tutorial="add-bot">加人机</button>}
                 </div>
               ))}
             </div>
-            <p className="field-hint">每一步限时 30 秒，超时由系统替你打完这一回合；连续两次超时转人机托管。</p>
+            <p className="field-hint">每一步限时 30 秒，超时由系统替你打完这一回合；连续两次超时转人机托管，掉线时也由人机代打，回来能接上。</p>
             <RoomSettingsPanel room={room} />
             <SeatSwitch room={room} />
             <div className="room-actions">
@@ -514,6 +588,7 @@ function RoomView({
               {isHost && room.members.length < 2 && <p className="field-hint centered">还需要至少 {2 - room.members.length} 位玩家加入，也可以点空座位上的「加人机」。</p>}
             </div>
           </section>
+          <div className="ll-room-chat">{chat}</div>
         </div>
       ) : null}
 

@@ -1,6 +1,8 @@
 /*
- * 白天版手调的部分。大部分白天样式由 day-theme.ts 从 app-pixel.css、board.css 换色生成，
+ * 白天版手调的部分。大部分白天样式由 day-theme.ts 从 app-pixel.css、ll.css 换色生成，
  * 这里只放机械换色不合适的地方；选择器都以 :root[data-theme="day"] 开头。
  */
 :root[data-theme="day"] { color-scheme: light; }
-:root[data-theme="day"] .app-shell * { scrollbar-color: #aebad0 var(--bg); }
+:root[data-theme="day"] .app-shell * { scrollbar-color: #c9a593 var(--bg); }
+/* 牌桌的遮罩：白天场景本来就亮，只压一层很淡的白，免得面板和场景糊在一起 */
+:root[data-theme="day"] .ll-table { --veil: rgba(255, 255, 255, 0.28); }

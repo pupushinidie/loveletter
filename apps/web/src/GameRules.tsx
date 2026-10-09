@@ -1,61 +1,76 @@
-import { useState } from "react";
-import { ROLE_COUNT, ROLE_NAME, ROLE_VALUE, ROLES, type Role } from "@loveletter/game";
+import { useEffect, useState } from "react";
+import { ROLE_COUNT, ROLE_NAME, ROLE_VALUE, ROLES } from "@loveletter/game";
+import { Icon, Mini } from "./Cards.js";
+import { ROLE_EFFECT } from "./describe.js";
 
-/** 每种牌一句话（自己的话，不照搬原版规则书）。 */
-const EFFECT: Record<Role, string> = {
-  spy: "没有效果。一小局结束时，还在局中的人里只有你打出或弃掉过间谍，额外拿 1 枚标记。",
-  guard: "点一个别人，猜一个角色（不能猜卫兵）；猜中他就出局。",
-  priest: "偷看一个别人的手牌，只有你看得到。",
-  baron: "和一个别人比手里剩下那张的点数，小的出局；一样大都没事。",
-  handmaid: "到你下一回合开始前，别人的牌都不能选你。",
-  prince: "点任何人（可以是自己）弃掉手牌重抽一张；弃掉公主就出局。",
-  chancellor: "抽 2 张，三张里留 1 张，另外 2 张按你定的顺序放回牌堆底。",
-  king: "和一个别人交换手牌。",
-  countess: "没有效果；手里另一张是国王或王子时必须打她。",
-  princess: "自己打出或被弃掉都立刻出局。",
-};
-
-/** 规则说明：用自己的话写，不照搬原版规则书。正式版由界面阶段排版。 */
-function GameRules() {
+/** 规则说明：一个按钮，点开是像素弹窗。用自己的话写，不照搬原版规则书；21 张牌配小牌图。 */
+function GameRules({ className = "quiet-button" }: { className?: string }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
-    <section className={open ? "game-rules open" : "game-rules"}>
-      <button
-        className="game-rules-toggle"
-        type="button"
-        aria-expanded={open}
-        aria-controls="game-rules-panel"
-        onClick={() => setOpen((current) => !current)}
-      >
-        <span aria-hidden="true">✦</span> 游戏规则
-        <i aria-hidden="true">{open ? "收起 ▴" : "展开 ▾"}</i>
-      </button>
-
+    <>
+      <button className={`${className} ll-rules-button`} type="button" aria-expanded={open} data-tutorial="rules-button" onClick={() => setOpen(true)}>规则</button>
       {open && (
-        <div className="game-rules-panel" id="game-rules-panel">
-          <div className="game-rules-block">
-            <h3>目标</h3>
-            <p>
-              每人手里只有一张牌。轮到你时抽一张，再从两张里打出一张、照它的效果做。撑到最后一个，
-              或者牌堆抽完时手里点数最大，就赢下这一小局、拿 1 枚钟情标记。2/3/4/5/6 人分别攒到 6/5/4/3/3 枚赢整场。
-            </p>
-          </div>
-          <div className="game-rules-block">
-            <h3>21 张牌</h3>
-            <ul>
-              {ROLES.map((role) => (
-                <li key={role}><b>{ROLE_VALUE[role]} {ROLE_NAME[role]}</b>（{ROLE_COUNT[role]} 张）：{EFFECT[role]}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="game-rules-block">
-            <h3>一小局结束</h3>
-            <p>只剩一个人就他赢；牌堆抽完时亮牌比大小，一样大都算赢。下一小局由赢家先手。每一步限时 30 秒，超时系统替你打完这一回合；连续两次超时转人机托管。</p>
-          </div>
+        <div className="gm-modal-backdrop ll-backdrop" role="presentation" onClick={() => setOpen(false)}>
+          <section className="gm-panel ll-rules" role="dialog" aria-modal="true" aria-labelledby="ll-rules-title" onClick={(event) => event.stopPropagation()}>
+            <h2 id="ll-rules-title"><Icon name="letter" /> 情书怎么玩</h2>
+            <div className="game-rules-block">
+              <h3>目标</h3>
+              <p>
+                每人手里只拿 <b>1 张牌</b>。一小局里撑到最后一个人，或者牌堆抽完时手里点数最大，就赢下这一小局、拿 1 枚<b>钟情标记</b>。
+                2 / 3 / 4 / 5 / 6 人局分别先攒到 <b>6 / 5 / 4 / 3 / 3</b> 枚的人赢整场（可以几个人一起赢）。
+              </p>
+            </div>
+            <div className="game-rules-block">
+              <h3>轮到你</h3>
+              <ol>
+                <li>先抽 1 张，手里变成 2 张。</li>
+                <li>从 2 张里<b>打出 1 张</b>，摆到自己面前，照它的效果做（对自己不利也得做）。另一张留在手里。</li>
+                <li>要选人的牌只能选还在局中、没受侍女保护的人；一个都选不了时这张就白打。</li>
+              </ol>
+            </div>
+            <div className="game-rules-block">
+              <h3>21 张牌（牌桌中央的记牌条悬停也能看）</h3>
+              <ul className="ll-ref">
+                {ROLES.map((role) => (
+                  <li key={role}>
+                    <Mini role={role} />
+                    <span>
+                      <b>{ROLE_VALUE[role]} {ROLE_NAME[role]}<small>×{ROLE_COUNT[role]}</small></b>
+                      <em>{ROLE_EFFECT[role]}</em>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="game-rules-block">
+              <h3>出局和一小局结束</h3>
+              <ul>
+                <li>出局的人亮出手牌，这一小局不再轮到他，别人也不能选他。</li>
+                <li>只剩一个人时他立刻赢；牌堆抽完的那个回合结束后，还在局的人亮牌比点数，<b>一样大就都算赢</b>，各拿 1 枚。</li>
+                <li>间谍：一小局结束时，还在局中的人里<b>只有你</b>打过或弃过间谍，再多拿 1 枚（可以和赢的那枚叠加）。</li>
+                <li>开局面朝下移出 1 张牌，谁都不用，结束时亮出来；2 人局另外面朝上移出 3 张。下一小局由上一局的赢家先手。</li>
+              </ul>
+            </div>
+            <div className="game-rules-block">
+              <h3>时间和托管</h3>
+              <p>
+                每一步限时 30 秒，超时由系统替你打完这一回合；连续两次超时转人机托管，点「取消托管」就能收回。掉线时也由人机代打，回来接着玩。
+              </p>
+            </div>
+            <div className="gm-panel-actions">
+              <button className="primary-button" type="button" onClick={() => setOpen(false)}>知道了</button>
+            </div>
+          </section>
         </div>
       )}
-    </section>
+    </>
   );
 }
 
