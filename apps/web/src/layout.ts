@@ -57,7 +57,8 @@ export const fanWidth = (count: number, scale: number) => (count <= 0 ? CARD_W *
 const seatHeight = (disc: number) => SEAT_PAD_Y * 2 + SEAT_HEAD + SEAT_INNER_GAP + CARD_H * disc;
 const seatWidth = (disc: number, discards: number) => Math.max(SEAT_MIN_W, SEAT_PAD_X * 2 + SEAT_BACKS + 8 + fanWidth(Math.max(5, discards), disc));
 const stripWidth = (strip: number) => 10 * MINI_W * strip + 9 * STRIP_GAP;
-const centerHeight = (strip: number) => PILE_H + CENTER_GAP + STRIP_HEAD + MINI_H * strip;
+/** 记牌条 1× 时数字写在小牌下面（盖在 32×44 上会把牌挡住），2× 时压在右下角。 */
+const centerHeight = (strip: number) => PILE_H + CENTER_GAP + STRIP_HEAD + (strip === 1 ? MINI_H + 26 : MINI_H * strip);
 const centerWidth = (strip: number, faceUp: boolean) => Math.max(stripWidth(strip), PILE_W * 2 + 12 + (faceUp ? 3 * CARD_W + 16 : 0));
 const meHeight = (hand: number, disc: number) => ME_PAD * 2 + Math.max(SEAT_HEAD + SEAT_INNER_GAP + CARD_H * disc, CARD_H * hand + HAND_LIFT, ACTION_MIN_H);
 /** 自己的打出区放不下时 Fan 会收紧间距，这里只按 5 张估。 */

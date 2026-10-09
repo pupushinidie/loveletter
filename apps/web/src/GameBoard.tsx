@@ -128,7 +128,8 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
   const initialLog = useMemo(() => game.history.map((event) => describeEvent(event, nameOf, selfId)).filter((line): line is Line => line !== null), []);
   const [log, setLog] = useState<Line[]>(initialLog);
   const [fresh, setFresh] = useState<Fresh>(NO_FRESH);
-  const [reveal, setReveal] = useState<Reveal | null>(null);
+  // 刚进来（或刷新）时，最近一步里有只给自己看的结果也弹出来
+  const [reveal, setReveal] = useState<Reveal | null>(() => (spectating ? null : revealFrom(game.events, selfId)));
   const seen = useRef({ version: game.version, round: game.round, len: game.history.length, players: game.players });
   useEffect(() => {
     const prev = seen.current;
@@ -149,15 +150,8 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
     }
     setFresh({ discards, out, shield });
     if (!spectating) {
-      for (const event of newEvents) {
-        if (event.type === "Peeked" && event.player === selfId && event.card) setReveal({ kind: "peek", target: event.target, card: event.card });
-        if (event.type === "Compared" && event.playerCard && event.targetCard && (event.player === selfId || event.target === selfId)) {
-          setReveal({ kind: "compare", player: event.player, target: event.target, playerCard: event.playerCard, targetCard: event.targetCard, loser: event.loser });
-        }
-        if (event.type === "Swapped" && event.playerGot && event.targetGot && (event.player === selfId || event.target === selfId)) {
-          setReveal({ kind: "swap", player: event.player, target: event.target, playerGot: event.playerGot, targetGot: event.targetGot });
-        }
-      }
+      const found = revealFrom(newEvents, selfId);
+      if (found) setReveal(found);
     }
     seen.current = { version: game.version, round: game.round, len: game.history.length, players: game.players };
   }, [game.version]);
@@ -514,6 +508,22 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
   );
 }
 
+/** 一串事件里最后一个只给自己看的结果：自己出牧师看到的牌、自己参与的比牌、自己参与的换牌。 */
+function revealFrom(events: readonly GameEvent[], me: string): Reveal | null {
+  let found: Reveal | null = null;
+  if (!me) return null;
+  for (const event of events) {
+    if (event.type === "Peeked" && event.player === me && event.card) found = { kind: "peek", target: event.target, card: event.card };
+    if (event.type === "Compared" && event.playerCard && event.targetCard && (event.player === me || event.target === me)) {
+      found = { kind: "compare", player: event.player, target: event.target, playerCard: event.playerCard, targetCard: event.targetCard, loser: event.loser };
+    }
+    if (event.type === "Swapped" && event.playerGot && event.targetGot && (event.player === me || event.target === me)) {
+      found = { kind: "swap", player: event.player, target: event.target, playerGot: event.playerGot, targetGot: event.targetGot };
+    }
+  }
+  return found;
+}
+
 /* ---------- 侧栏的「记录 / 聊天」 ---------- */
 
 function useSideTabs(room: LobbyRoomSnapshot) {
@@ -695,7 +705,7 @@ function MyArea({ game, me, member, spectating, layout, fresh, sel, canPlay, pla
         {targetable && <span className="ll-pick-tag">{chosen ? "已选自己" : "点这里选自己"}</span>}
         {fresh.shield.has(me.id) && <Sprite name="shield" scale={2} mode="once" className="ll-shield-fx" />}
       </div>
-      <div className={["ll-hand", hand.length > 2 ? "three" : "", canPlay ? "live" : ""].join(" ")} data-tutorial="hand">
+      <div className={["ll-hand", hand.length > 2 ? "three" : "", canPlay ? "live" : ""].join(" ")} style={{ "--card-w": `${72 * scale}px` } as CSSProperties} data-tutorial="hand">
         {hand.length === 0 && <span className="ll-hand-empty">{me.out ? "出局了" : ""}</span>}
         {hand.map((role, index) => {
           const ok = role !== "back" && playable(role);

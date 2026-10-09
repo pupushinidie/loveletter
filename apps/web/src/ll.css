@@ -168,6 +168,7 @@
   font-size: 24px; font-weight: 400; line-height: 24px; text-align: center;
 }
 .ll-strip-cells li.none b { color: #c9a894; }
+.ll-strip-cells.s1 b { position: static; display: block; margin-top: 2px; min-width: 0; box-shadow: none; background: rgba(28, 6, 9, 0.85); }
 .ll-tip {
   position: absolute; z-index: 60; left: 50%; bottom: calc(100% + 8px); display: none; width: 240px; padding: 8px 10px;
   color: #f7ead8; background: #1c0609; box-shadow: 0 0 0 var(--px) #9c6f22; transform: translateX(-50%);
@@ -197,7 +198,7 @@
 .ll-me.chosen .ll-me-info { background: rgba(58, 44, 16, 0.95); outline: calc(var(--px) * 2) solid var(--gold); }
 .ll-me-info .ll-seat-fan { display: flex; flex: 1; align-items: center; }
 .ll-hand { display: flex; flex: 0 0 auto; align-items: flex-end; gap: 12px; padding-top: 8px; }
-.ll-hand.three .ll-hand-card + .ll-hand-card { margin-left: -40%; }
+.ll-hand.three .ll-hand-card + .ll-hand-card { margin-left: calc(var(--card-w) * -0.5 - 12px); }
 .ll-hand-empty { color: var(--muted); }
 .ll-hand-card { position: relative; display: block; padding: 0; border: 0; background: none; cursor: default; filter: drop-shadow(3px 3px 0 rgba(10, 3, 4, 0.6)); }
 .ll-hand-card img { display: block; }
@@ -307,7 +308,7 @@
 .ll-guess-option small { color: var(--muted); }
 .ll-guess-option:hover { background: #45202a; }
 .ll-guess-option.selected { color: #2a1c06; background: var(--gold); box-shadow: 0 0 0 calc(var(--px) * 2) #fff2b8; }
-.ll-guess-option.selected small { color: #2a1c06; }
+.ll-guess-grid .ll-guess-option.selected :is(small, b) { color: #2a1c06; }
 .ll-guess-option.none img { filter: grayscale(1) brightness(0.6); }
 .ll-guess-option.none b { color: var(--muted); }
 
@@ -406,9 +407,10 @@
 .ll-screen.mobile .ll-main { display: flex; flex-direction: column; }
 .ll-screen.mobile .ll-table { display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 8px; overflow: visible; }
 .ll-screen.mobile .ll-me { flex-direction: column; align-items: stretch; gap: 8px; }
-.ll-screen.mobile .ll-me-info { order: 1; min-width: 0; }
-.ll-screen.mobile .ll-hand { order: 2; justify-content: center; padding-top: 0; }
-.ll-screen.mobile .ll-action { order: 3; min-width: 0; max-width: none; flex: 0 0 auto; }
+/* 手机：手牌和操作区放最前（第一屏一定看得到），自己的名牌和打出区跟在后面；标记数在顶栏的座位条里 */
+.ll-screen.mobile .ll-hand { order: 1; justify-content: center; padding-top: 8px; }
+.ll-screen.mobile .ll-action { order: 2; min-width: 0; max-width: none; flex: 0 0 auto; }
+.ll-screen.mobile .ll-me-info { order: 3; min-width: 0; }
 .ll-screen.mobile .ll-me-info { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 4px 8px 4px 10px; }
 .ll-screen.mobile .ll-me-info .ll-seat-head { flex: 1 1 100%; }
 .ll-screen.mobile .ll-seat-head { height: 28px; gap: 4px; }
@@ -418,11 +420,10 @@
 .ll-screen.mobile .ll-center { align-self: stretch; padding: 8px; }
 .ll-screen.mobile .ll-piles { gap: 8px; }
 .ll-screen.mobile .ll-strip-cells { gap: 2px; }
-.ll-screen.mobile .ll-strip-cells b { right: -2px; bottom: -2px; }
 .ll-screen.mobile .ll-opps { display: flex; flex-direction: column; gap: 8px; }
 .ll-screen.mobile .ll-seat { width: auto; }
 .ll-screen.mobile .ll-seat-body { min-height: 44px; }
-.ll-screen.mobile .ll-side { min-height: 360px; }
+.ll-screen.mobile .ll-side { min-height: 280px; }
 .ll-screen.mobile .ll-status { display: none; }
 .ll-screen.mobile .ll-tip { width: 200px; }
 
@@ -554,6 +555,12 @@
   .app-shell.ll-room .room-heading h1 { margin-top: 0; font-size: 24px; }
   .app-shell.ll-room .room-chat-list { min-height: 40px; }
   .ll-room .room-feedback.feedback-success { display: none; }
+  .ll-room .player-panel > .field-hint { display: none; }
+}
+@media (min-width: 760px) and (max-width: 1180px) and (max-height: 760px) {
+  /* 平板横屏：牌一览收起（规则按钮里有），给聊天和开始按钮让地方 */
+  .ll-room :is(.ll-deck-list, .ll-deck-label) { display: none; }
+  .ll-room .player-row { min-height: 50px; }
 }
 @media (min-width: 760px) and (max-height: 820px) {
   .ll-room .room-layout { padding-top: 16px; }
