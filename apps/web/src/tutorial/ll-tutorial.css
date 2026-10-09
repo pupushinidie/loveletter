@@ -51,3 +51,10 @@
   .tut-dock .tut-say { line-height: 1.3; }
   .tut-dock .tut-note { line-height: 1.5; }
 }
+
+/* 等候房间的教程邀请卡：矮屏上只留标题和按钮（1024×690 下不然会多出十几像素要滚动） */
+.ll-room .tut-invite { margin-top: 12px; }
+@media (max-height: 720px) and (min-width: 521px) {
+  .ll-room .tut-invite { padding: 8px 12px; }
+  .ll-room .tut-invite-copy span { display: none; }
+}
