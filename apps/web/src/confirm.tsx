@@ -35,6 +35,7 @@ export function useConfirm(): [(request: ConfirmRequest) => Promise<boolean>, Re
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="app-confirm-title"
+        data-tutorial="confirm-dialog"
         onKeyDown={(event) => {
           if (event.key === "Escape") close(false);
         }}
@@ -42,7 +43,7 @@ export function useConfirm(): [(request: ConfirmRequest) => Promise<boolean>, Re
         <h2 id="app-confirm-title">{pending.title}</h2>
         <p>{pending.detail}</p>
         <div className="gm-panel-actions">
-          <button type="button" className="quiet-button" onClick={() => close(false)}>取消</button>
+          <button type="button" className="quiet-button" data-tutorial="confirm-cancel" onClick={() => close(false)}>取消</button>
           <button type="button" className="quiet-button danger" autoFocus onClick={() => close(true)}>{pending.confirmLabel}</button>
         </div>
       </section>

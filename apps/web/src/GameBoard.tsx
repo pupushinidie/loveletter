@@ -32,6 +32,9 @@ import { useLayout, type Layout } from "./layout.js";
 import { GameRoomMenu, SpectateBar } from "./RoomExtras.js";
 import { socket } from "./socket.js";
 import type { Theme } from "./theme.js";
+import { Coach, TipToast } from "./tutorial/Coach.js";
+import { detectTips, GAME_ID, hintFor, TIPS, type Hint } from "./tutorial/hints.js";
+import { useFirstTimeTips } from "./tutorial/tips.js";
 
 interface GameBoardProps {
   readonly room: LobbyRoomSnapshot;
@@ -54,6 +57,18 @@ interface GameBoardProps {
   readonly onWatch: (playerId: string) => void;
   /** 观战的人离开。 */
   readonly onLeave: () => void;
+  /** 自己在 room.members 里的 id；默认是 socket.id（新手教程不连服务器，传固定值）。 */
+  readonly selfMemberId?: string;
+  /**
+   * online：真实对局（只有自己和人机时能看「提示」，第一次遇到某条规则时弹小贴士）；
+   * tutorial：新手教程的剧本进行中（咕噜嘎在讲，不出提示和小贴士）；
+   * practice：教程后的练习局（随时能看提示）。
+   */
+  readonly mode?: "online" | "tutorial" | "practice";
+  /** 整场结束弹窗里代替「再来一局」的按钮（教程的练习局用）。 */
+  readonly finalActions?: ReactNode;
+  /** 侧栏状态区下面多放的东西（教程进度）。 */
+  readonly sideExtra?: ReactNode;
 }
 
 function useCountdown(room: LobbyRoomSnapshot): number | null {
@@ -83,9 +98,12 @@ interface Fresh {
 }
 const NO_FRESH: Fresh = { discards: {}, out: new Set(), shield: new Set() };
 
-function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, theme, chat, onCommand, onRematch, onAuto, onDissolve, watchId, onWatch, onLeave }: GameBoardProps) {
+function GameBoard({
+  room, busy, error, notice, brand, connection, themeToggle, theme, chat, onCommand, onRematch, onAuto, onDissolve, watchId, onWatch, onLeave,
+  selfMemberId, mode = "online", finalActions, sideExtra,
+}: GameBoardProps) {
   const game = room.game!;
-  const member = room.members.find((candidate) => candidate.id === socket.id);
+  const member = room.members.find((candidate) => candidate.id === (selfMemberId ?? socket.id));
   // 观战的人没有座位：按 watchId 那位玩家的座位摆，什么都不能点，也不叫「你」。
   const spectating = !member;
   const myId = member?.playerId ?? watchId;
@@ -107,6 +125,25 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
   );
   const seatOf = useCallback((playerId: string) => game.players.find((player) => player.id === playerId)?.seat ?? 0, [game.players]);
   const [confirm, confirmDialog] = useConfirm();
+
+  // ---------- 「提示」和「第一次」小贴士（新手教程那一套） ----------
+  // 提示：练习局随时能用；真实对局里只有自己和人机时能用（有别的真人就不显示）
+  const botsOnly = room.members.length > 1 && room.members.every((candidate) => candidate.playerId === myId || candidate.bot === true);
+  const canHint = !spectating && !autoPlaying && (myTurn || game.phase === "roundEnd") && (mode === "practice" || (mode === "online" && botsOnly));
+  const [hintShown, setHintShown] = useState<{ version: number; hint: Hint } | null>(null);
+  const shownHint = hintShown && hintShown.version === game.version && canHint ? hintShown.hint : null;
+  const toggleHint = () => setHintShown((current) => (current && current.version === game.version ? null : { version: game.version, hint: hintFor(game, myId) }));
+  useEffect(() => {
+    if (!canHint) return;
+    const handle = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (event.metaKey || event.ctrlKey || event.altKey || target?.closest("input, textarea, [contenteditable]")) return;
+      if (event.key.toLowerCase() === "h") toggleHint();
+    };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+  }, [canHint, game.version]);
+  const tips = useFirstTimeTips(GAME_ID, game.version, () => detectTips(game, myId), TIPS, mode === "online" && !spectating);
 
   // ---------- 摆法 ----------
   const oppDiscards = Math.max(0, ...opponents.map((player) => player.discards.length));
@@ -371,6 +408,11 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
       onCancel={() => { setSel(null); setHint(""); }}
       onAuto={onAuto}
       onShowResult={() => { setResultHidden(false); setFinalHidden(false); }}
+      hintButton={canHint && game.phase === "playing" && game.stage === "play" ? (
+        <button className={shownHint ? "quiet-button ll-hint-button on" : "quiet-button ll-hint-button"} type="button" data-tutorial="hint" onClick={toggleHint}>
+          提示{!layout.mobile && <kbd>H</kbd>}
+        </button>
+      ) : null}
     />
   );
 
@@ -403,16 +445,19 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
       <section className="ll-panel ll-status" data-tutorial="status">
         <h2>第 {game.round} 小局</h2>
         <p className="ll-goal" data-tutorial="goal"><Icon name="favor" scale={1} /> {count} 人局：先攒够 <b>{game.config.tokensToWin}</b> 枚钟情标记的人赢整场</p>
-        {!spectating && game.phase !== "finished" && !autoPlaying && (
+        {sideExtra}
+        {!spectating && game.phase !== "finished" && !autoPlaying && mode === "online" && (
           <button className="quiet-button ll-auto-toggle" type="button" data-tutorial="auto-button" onClick={() => onAuto(true)}>托管</button>
         )}
       </section>
       <section className="ll-panel ll-tabs">
         <div className="ll-tab-bar" role="tablist">
           <button type="button" role="tab" aria-selected={sideTabs.tab === "log"} className={sideTabs.tab === "log" ? "active" : ""} data-tutorial="log-tab" onClick={() => sideTabs.setTab("log")}>记录</button>
-          <button type="button" role="tab" aria-selected={sideTabs.tab === "chat"} className={sideTabs.tab === "chat" ? "active" : ""} data-tutorial="chat-tab" onClick={() => sideTabs.setTab("chat")}>
-            聊天{sideTabs.unread > 0 && <em>{sideTabs.unread}</em>}
-          </button>
+          {chat !== null && (
+            <button type="button" role="tab" aria-selected={sideTabs.tab === "chat"} className={sideTabs.tab === "chat" ? "active" : ""} data-tutorial="chat-tab" onClick={() => sideTabs.setTab("chat")}>
+              聊天{sideTabs.unread > 0 && <em>{sideTabs.unread}</em>}
+            </button>
+          )}
         </div>
         {sideTabs.tab === "log" ? <LogList lines={log} /> : <div className="ll-chat">{chat}</div>}
       </section>
@@ -509,9 +554,23 @@ function GameBoard({ room, busy, error, notice, brand, connection, themeToggle, 
         <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
       )}
       {!reveal && game.phase === "finished" && !finalHidden && resultHidden && (
-        <FinalDialog game={game} room={room} me={selfId} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
+        <FinalDialog game={game} room={room} me={selfId} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} {...(finalActions ? { actions: finalActions } : {})} />
       )}
       {confirmDialog}
+      {shownHint && (
+        <Coach
+          view={{
+            key: `hint-${game.version}`,
+            say: shownHint.say,
+            ...(shownHint.note ? { note: shownHint.note } : {}),
+            anchor: shownHint.anchor,
+            focus: false,
+            face: "think",
+            actions: <button className="quiet-button" type="button" onClick={() => setHintShown(null)}>知道了</button>,
+          }}
+        />
+      )}
+      {tips.tip && <TipToast tip={tips.tip} onClose={tips.dismiss} onNever={tips.never} />}
     </div>
   );
 }
@@ -752,7 +811,7 @@ function MyArea({ game, me, member, spectating, layout, fresh, sel, canPlay, pla
 
 function ActionPanel({
   headline, detail, hint, notice, recent, myTurn, sel, needsTarget, choices, candidates, nameOf, myId, autoPlaying, spectating, phase, resultHidden,
-  onTarget, onConfirm, onCancel, onAuto, onShowResult,
+  onTarget, onConfirm, onCancel, onAuto, onShowResult, hintButton,
 }: {
   headline: string;
   detail: string;
@@ -775,13 +834,15 @@ function ActionPanel({
   onCancel: () => void;
   onAuto: (enabled: boolean) => void;
   onShowResult: () => void;
+  /** 「提示」按钮（只有自己和人机时、练习局里才有）。 */
+  hintButton: ReactNode;
 }) {
   const showRecent = phase === "playing" && !(myTurn && sel) && recent.length > 0;
   return (
     <>
-      <h2 className="ll-action-title">{headline}</h2>
+      <h2 className="ll-action-title">{headline}{hintButton}</h2>
       {detail && <p className="ll-action-detail">{detail}</p>}
-      {hint && <p className="ll-action-hint" role="alert">{hint}</p>}
+      {hint && <p className="ll-action-hint" role="alert" data-tutorial="action-hint">{hint}</p>}
       {!hint && notice && <p className="ll-action-notice" role="status">{notice}</p>}
       {myTurn && sel && needsTarget && (
         <div className="ll-targets" data-tutorial="target-picker">

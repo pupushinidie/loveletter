@@ -16,7 +16,7 @@ import { Card, Icon, Mini, Seal, Sprite } from "./Cards.js";
 import { ROLE_EFFECT, ROLE_SHORT, roleLabel } from "./describe.js";
 import { socket } from "./socket.js";
 
-function Modal({ className, label, children, onClose }: { className: string; label: string; children: ReactNode; onClose?: () => void }) {
+function Modal({ className, label, children, onClose, anchor }: { className: string; label: string; children: ReactNode; onClose?: () => void; anchor?: string }) {
   useEffect(() => {
     if (!onClose) return;
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
@@ -25,7 +25,7 @@ function Modal({ className, label, children, onClose }: { className: string; lab
   }, [onClose]);
   return (
     <div className="gm-modal-backdrop ll-backdrop" role="presentation" onMouseDown={(event) => { if (onClose && event.target === event.currentTarget) onClose(); }}>
-      <section className={`gm-panel ll-dialog ${className}`} role="dialog" aria-modal="true" aria-label={label}>
+      <section className={`gm-panel ll-dialog ${className}`} role="dialog" aria-modal="true" aria-label={label} data-tutorial={anchor}>
         {children}
       </section>
     </div>
@@ -94,7 +94,7 @@ export function ChancellorDialog({ hand, scale, onSubmit }: { hand: readonly Rol
     onSubmit({ type: "CHANCELLOR", keep: hand[keep]!, bottom: order.map((card) => card.role) });
   };
   return (
-    <Modal className="ll-chancellor" label="大臣留牌">
+    <Modal className="ll-chancellor" label="大臣留牌" anchor="chancellor-dialog">
       <h2>大臣：留 1 张，{hand.length - 1} 张放回牌堆底</h2>
       <p className="ll-dialog-note">放回去的牌不发动、不算弃牌（公主放回去也不会出局）。手里 3 张时不用管女伯爵。</p>
       <div className="ll-chancellor-cards" data-tutorial="chancellor-panel">
@@ -180,12 +180,12 @@ export function RevealDialog({ reveal, me, name, seatOf, scale, onClose }: {
     );
   }
   return (
-    <Modal className="ll-reveal" label={title} onClose={onClose}>
+    <Modal className="ll-reveal" label={title} onClose={onClose} anchor="reveal-dialog">
       <h2 data-tutorial="reveal"><Icon name={reveal.kind === "peek" ? "eye" : reveal.kind === "compare" ? "duel" : "swap"} /> {title}</h2>
       {body}
       <p className="ll-dialog-note">{note}</p>
       <div className="gm-panel-actions">
-        <button className="primary-button" type="button" autoFocus onClick={onClose}>知道了</button>
+        <button className="primary-button" type="button" autoFocus data-tutorial="reveal-ok" onClick={onClose}>知道了</button>
       </div>
     </Modal>
   );
@@ -217,7 +217,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
   const canReady = me !== "" && game.phase === "roundEnd" && !iAmReady;
   const order = [...game.players].sort((a, b) => Number(winners.includes(b.id)) - Number(winners.includes(a.id)) || b.tokens - a.tokens);
   return (
-    <Modal className="ll-result" label="一小局结算">
+    <Modal className="ll-result" label="一小局结算" anchor="result-dialog">
       <div className="ll-banner" style={{ backgroundImage: `url(${art.banner})` }} data-tutorial="round-result">
         <span>{iWon ? "你赢了这一小局" : `第 ${result.round} 小局结束`}</span>
       </div>
@@ -273,7 +273,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
       </div>
       {game.phase === "roundEnd" && (
         <div className="ll-result-next">
-          <span>
+          <span data-tutorial="next-starter">
             {onCancelAuto ? "托管中：人机替你出牌 · " : ""}
             {result.nextStarter ? `下一局 ${name(result.nextStarter)} 先手` : ""}
             {humans.length > 0 ? ` · 已准备 ${readyCount}/${humans.length}` : ""}
@@ -303,8 +303,10 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
 
 /* ---------- 整场结束 ---------- */
 
-export function FinalDialog({ game, room, me, spectating, name, onRematch, onLeave, onHide, onCancelAuto }: {
+export function FinalDialog({ game, room, me, spectating, name, onRematch, onLeave, onHide, onCancelAuto, actions }: {
   game: GameState;
+  /** 有就用它代替「再来一局」那一段（新手教程的练习局：结束教程 / 再练一场）。 */
+  actions?: ReactNode;
   onCancelAuto?: () => void;
   room: LobbyRoomSnapshot;
   me: string;
@@ -319,7 +321,7 @@ export function FinalDialog({ game, room, me, spectating, name, onRematch, onLea
   const standings = [...game.players].sort((a, b) => b.tokens - a.tokens || a.seat - b.seat);
   const iWon = winners.includes(me);
   return (
-    <Modal className="ll-final" label="整场结束">
+    <Modal className="ll-final" label="整场结束" anchor="final-dialog">
       <div className="ll-petals" aria-hidden="true">
         {Array.from({ length: 12 }, (_, index) => (
           <span key={index} style={{ "--i": index } as CSSProperties}><Sprite name="petal" scale={2} delay={-index * 150} /></span>
@@ -338,7 +340,12 @@ export function FinalDialog({ game, room, me, spectating, name, onRematch, onLea
           </li>
         ))}
       </ol>
-      {spectating ? (
+      {actions && !spectating ? (
+        <div className="gm-panel-actions ll-final-actions">
+          <button className="quiet-button" type="button" onClick={onHide}>看牌桌</button>
+          {actions}
+        </div>
+      ) : spectating ? (
         <div className="ll-rematch">
           <span>{room.rematch ? `等玩家决定要不要再来一局（${room.rematch.acceptedIds.length}/${room.members.length} 人同意）` : "对局结束"}</span>
           <div className="gm-panel-actions">

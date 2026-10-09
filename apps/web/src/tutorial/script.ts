@@ -44,6 +44,8 @@ export interface Cond {
 /** 一步里的一下：高亮哪里、说什么。when 满足的最后一下就是现在这一下（第一下不写 when）。 */
 export interface SubStep {
   readonly anchor: Anchor;
+  /** anchor 是整个弹窗、而弹窗高到放不下咕噜嘎的对话框时（手机、矮屏），改指这个小目标（弹窗里要点的按钮）。 */
+  readonly anchorSmall?: Anchor;
   readonly say: string;
   readonly note?: string;
   readonly noteTouch?: string;
@@ -61,6 +63,8 @@ interface StepBase {
   /** 触屏设备上换成这句。 */
   readonly noteTouch?: string;
   readonly anchor?: Anchor;
+  /** 同 SubStep.anchorSmall。 */
+  readonly anchorSmall?: Anchor;
   readonly face?: TutorialFace;
   /** 要点好几下的步骤：每一下的高亮和说法（有它时 say / anchor 只用在单测和第一下之前）。 */
   readonly subs?: readonly SubStep[];
@@ -223,7 +227,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     }),
   },
   {
-    kind: "info", id: "miss", anchor: "recent", face: "think",
+    kind: "info", id: "miss", anchor: "discards-me", face: "think",
     say: "没猜中，什么都不会发生。",
     note: "一号手里不是男爵；打出的卫兵摆在你面前，大家都看得见。",
   },
@@ -281,7 +285,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     moves: [play("king", TUTORIAL_SELF)],
   },
   {
-    kind: "info", id: "king", lesson: "国王", anchor: "reveal-dialog",
+    kind: "info", id: "king", lesson: "国王", anchor: "reveal-dialog", anchorSmall: "reveal-ok",
     say: "咕噜二号用国王和你换了手牌，看完点「知道了」。",
     note: "你拿到男爵，他拿走了王子，你们俩都知道对方的牌；一号受保护，所以他只能选你。",
     until: { absent: "reveal-dialog" },
@@ -328,7 +332,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
         note: "放回牌堆底的牌不发动、不算弃牌，公主放回去也不会出局；这时手里 3 张也不用管女伯爵。",
       },
       {
-        anchor: "chancellor-dialog", say: "另外 2 张按你定的顺序放回牌堆底，点下面的确认按钮。",
+        anchor: "chancellor-dialog", anchorSmall: "chancellor-confirm", say: "另外 2 张按你定的顺序放回牌堆底，点下面的确认按钮。",
         note: "想换顺序就点「换顺序」，最后一张在最底下。",
         when: { pressed: "keep:princess" },
       },
@@ -354,7 +358,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     until: { present: "confirm-dialog" },
   },
   {
-    kind: "info", id: "princess-warn", anchor: "confirm-dialog", face: "surprised",
+    kind: "info", id: "princess-warn", anchor: "confirm-dialog", anchorSmall: "confirm-cancel", face: "surprised",
     say: "看，打出公主你立刻出局，所以会先问你：点「取消」。",
     note: "被王子弃掉也一样出局，公主只能一直攥在手里。",
     until: { absent: "confirm-dialog" },
@@ -370,8 +374,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   },
   {
     kind: "info", id: "win", lesson: "一局结束", anchor: "round-tokens", face: "happy",
-    say: "你的公主(9) 比他的卫兵(1) 大，一号出局，只剩你，你赢了！",
-    note: "只剩一个人时他立刻赢，+1 枚；两个打过间谍的人都出局了，这局没人拿间谍 +1。",
+    say: "公主(9) 比卫兵(1) 大，一号出局，你赢了！",
+    note: "只剩一个人时他立刻赢这一小局，+1 枚；打过间谍的两人都出局了，没人拿间谍 +1。",
   },
   {
     kind: "do", id: "next-round", expect: { type: "READY" }, anchor: "next-round-button",
@@ -452,7 +456,6 @@ export function anchorVisible(state: GameState, anchor: Anchor, viewer = TUTORIA
   // 打公主前的确认框：上一步（try-princess）点出来的，局面上只要求轮到你、手里有公主
   if (anchor === "confirm-dialog") return myTurn && state.stage === "play" && me.hand.includes("princess");
   if (anchor === "hand" || anchor === "stats" || anchor === "deck" || anchor === "discards-me") return true;
-  if (anchor === "recent") return playing && state.events.length > 0;
   if (anchor.startsWith("seat-") || anchor.startsWith("discards-")) return state.players.some((player) => `seat-${player.id}` === anchor || `discards-${player.id}` === anchor);
   if (anchor.startsWith("marks-")) {
     const player = state.players.find((candidate) => `marks-${candidate.id}` === anchor);
