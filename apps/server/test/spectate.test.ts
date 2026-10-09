@@ -18,14 +18,14 @@ import {
 /** 最小的房间人数（对局要坐满才开始测）。 */
 const CAPACITY: Capacity = 2;
 /** 这款游戏有没有藏起来的信息。 */
-const HIDDEN_INFO = false;
+const HIDDEN_INFO = true;
 /** 开局后先走几步（每步选轮到的人的第一个合法动作），让场上有藏起来的牌。 */
 const STEPS = 4;
-/** 只在服务端的字段（牌堆顺序、种子等），观战的人永远拿不到。 */
-const SERVER_ONLY = ["deck", "seed"];
-/** 这份状态里看得到几样藏起来的东西（手牌之类）。 */
-function secretsSeen(_game: GameState): number {
-  return 0;
+/** 只在服务端的字段（牌堆顺序、面朝下移出的牌、种子等），观战的人永远拿不到。 */
+const SERVER_ONLY = ["deck", "setAside", "seed", "rngState", "actions"];
+/** 这份状态里看得到几张手牌（情书藏起来的就是手牌）。 */
+function secretsSeen(game: GameState): number {
+  return game.players.reduce((total, player) => total + player.hand.length, 0);
 }
 // ----------------------------------------
 

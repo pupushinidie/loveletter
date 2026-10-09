@@ -2,6 +2,7 @@ import { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { io as createClient, type Socket } from "socket.io-client";
 import {
+  actorOf,
   legalActions,
   type AckResponse,
   type Capacity,
@@ -14,16 +15,15 @@ import {
 } from "@loveletter/game";
 
 // ---------- 每款游戏不一样的地方 ----------
-/** 测试里真人怎么走：从合法动作里挑一个（要保证对局能走完）。欲罢不能：推进完就收手，回合短。 */
-function humanMove(game: GameState, actions: GameCommand[]): GameCommand {
-  return game.stage === "decide" ? { type: "STOP" } : actions[0]!;
+/** 测试里真人怎么走：第一个不是打公主的合法动作（结算画面就是「下一局」）。 */
+function humanMove(_game: GameState, actions: GameCommand[]): GameCommand {
+  return actions.find((command) => !(command.type === "PLAY" && command.card === "princess")) ?? actions[0]!;
 }
-/** 这位玩家自己做了点什么（不是超时、不是轮到他）。 */
+/** 这位玩家自己打了一张牌（不是超时替他打的）。 */
 function actedBy(room: LobbyRoomSnapshot, playerId: string): boolean {
-  return room.game?.events.some((event) => {
-    const type: string = event.type;
-    return "player" in event && event.player === playerId && type !== "TurnTimedOut" && type !== "TurnStarted";
-  }) === true;
+  const events = room.game?.events ?? [];
+  return events.some((event) => event.type === "Played" && event.player === playerId)
+    && !events.some((event) => event.type === "TurnTimedOut");
 }
 /** 最小的房间人数选项、开局至少几人。 */
 const MIN_CAPACITY: Capacity = 2;
@@ -209,7 +209,7 @@ describe("人机", () => {
     expect(autoRoom.game!.events.some((event) => event.type === "TurnTimedOut" && event.player === idleSeat)).toBe(true);
 
     // 托管后轮到他时没有倒计时，人机替他走：之后他的回合不再超时，而是真的行动
-    const hisTurn = await updateWhere(idle, (snapshot) => isAuto(snapshot) && snapshot.game?.players[snapshot.game.currentPlayer]?.id === idleSeat);
+    const hisTurn = await updateWhere(idle, (snapshot) => isAuto(snapshot) && snapshot.game !== undefined && actorOf(snapshot.game) === idleSeat);
     expect(hisTurn.turnRemainingMs).toBeUndefined();
     await updateWhere(idle, (snapshot) => actedBy(snapshot, idleSeat));
 
