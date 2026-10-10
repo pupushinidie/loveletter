@@ -46,7 +46,8 @@ def preview(item: dict, opt: dict, key: str) -> Path:
     src = ART / opt["file"]
     kind = item["kind"]
     if kind == "portrait":
-        art = Image.open(src).convert("RGBA")
+        from export import apply_fixes
+        art = apply_fixes(Image.open(src), opt.get("fixes", []))
         card = cf.face(item["role"], art)
         mini = cf.mini(item["role"], art.crop((*opt.get("miniCrop", [18, 2]), opt.get("miniCrop", [18, 2])[0] + 28,
                                                 opt.get("miniCrop", [18, 2])[1] + 40)))

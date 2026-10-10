@@ -90,34 +90,20 @@ def recolor(img: Image.Image, target_hex: str) -> Image.Image:
 
 
 def favor_empty(favor: Image.Image) -> Image.Image:
-    """还没拿到的标记：去饱和、压暗、70% 不透明。"""
+    """还没拿到的标记：同一个金托压暗一档，红宝石换成深色的空凹槽（和简洁版一个思路，深底白天底都看得出是空位）。"""
     img = favor.copy()
     px = img.load()
     for y in range(img.height):
         for x in range(img.width):
             r, g, b, a = px[x, y]
-            if a:
-                grey = int((r * 0.3 + g * 0.59 + b * 0.11) * 0.55)
-                px[x, y] = (grey + 8, grey, grey + 4, int(a * 0.7))
-    return img
-
-
-def divider() -> Image.Image:
-    """96×8 金色卷草分隔条：中间一颗金心，两边渐细的金线和小卷。"""
-    img = Image.new("RGBA", (96, 8), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    gold, dark, shine = cf.C("gold"), cf.C("gold2"), cf.C("shine")
-    d.line([4, 4, 40, 4], fill=gold)
-    d.line([55, 4, 91, 4], fill=gold)
-    d.line([12, 5, 38, 5], fill=dark)
-    d.line([57, 5, 83, 5], fill=dark)
-    for x in (4, 91):
-        d.point([(x, 3), (x, 5)], fill=gold)
-    for x, s in ((40, -1), (55, 1)):
-        d.point([(x + s, 3), (x + s, 5), (x + 2 * s, 2), (x + 2 * s, 6)], fill=gold)
-    cf.heart(img, 44, 1, cf.C("ink"))
-    cf.heart(img, 44, 1, gold)
-    img.putpixel((45, 2), shine)
+            if not a:
+                continue
+            lum = (r * 0.3 + g * 0.59 + b * 0.11)
+            if r > 1.6 * g and r > 60:  # 红宝石 → 深色凹槽
+                k = min(1.0, lum / 120)
+                px[x, y] = (int(40 + 40 * k), int(8 + 10 * k), int(14 + 12 * k), a)
+            elif r > 90 and g > 60:  # 金托 → 暗金
+                px[x, y] = (int(r * 0.62), int(g * 0.55), int(b * 0.5), a)
     return img
 
 
@@ -178,8 +164,12 @@ def main() -> None:
     if "letter-win" in deco:
         save(fit(drop_specks(clean_alpha(Image.open(ART / deco["letter-win"]))), 64, 48), "ui/letter-win.png", (64, 48))
         n += 1
-    save(divider(), "ui/divider.png", (96, 8))
-    n += 1
+    # 代码画的正式图（牌背、牌堆、桌布、6 个界面小符号、花瓣、分隔条）：和 simple.py 同一份代码
+    import simple
+    for rel, w, h, frames, kind, fn in simple.MANIFEST:
+        if kind == "code":
+            save(fn(), rel, (w * frames, h))
+            n += 1
     for key, (w, h, frames) in FX.items():
         strip = ART / "out" / "anim" / key / "strip.png"
         if strip.exists():

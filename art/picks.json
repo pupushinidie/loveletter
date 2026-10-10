@@ -1,0 +1,481 @@
+{
+ "spy": {
+  "question": "间谍（0）牌面插画",
+  "kind": "portrait",
+  "role": "spy",
+  "options": [
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/r1/portraits/spy-s1.png",
+    "description": "评审推荐：金色半脸面具 1× 也认得出，光从左来；左上那支蜡烛已用代码盖掉",
+    "recommended": true,
+    "fixes": [
+     {
+      "op": "copy-cols",
+      "box": [
+       4,
+       8,
+       8,
+       46
+      ],
+      "dx": -4
+     }
+    ]
+   },
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/r1/portraits/spy-s2.png",
+    "description": "纸条上的笔画像字母，光从右来"
+   },
+   {
+    "value": "s3",
+    "label": "s3",
+    "file": "out/r1/portraits/spy-s3.png",
+    "description": "红眼睛，像反派"
+   },
+   {
+    "value": "s4",
+    "label": "s4",
+    "file": "out/r1/portraits/spy-s4.png",
+    "description": "正面平光，黑眼罩像佐罗"
+   }
+  ]
+ },
+ "guard": {
+  "question": "卫兵（1）牌面插画",
+  "kind": "portrait",
+  "role": "guard",
+  "options": [
+   {
+    "value": "s3-kick",
+    "label": "s3-kick",
+    "file": "out/r1/portraits/guard-s3-kick.png",
+    "description": "评审推荐：唯一一张罩袍上没有十字的，长柄武器清楚",
+    "recommended": true
+   },
+   {
+    "value": "s1-kick",
+    "label": "s1-kick",
+    "file": "out/r1/portraits/guard-s1-kick.png",
+    "description": "开工样张那张；胸前有小十字"
+   },
+   {
+    "value": "s4-kick",
+    "label": "s4-kick",
+    "file": "out/r1/portraits/guard-s4-kick.png",
+    "description": "胸前有小十字"
+   },
+   {
+    "value": "s7",
+    "label": "s7",
+    "file": "out/r1/portraits/guard-s7.png",
+    "description": "罩袍干净，但戟头在左上角会被点数金币挡住"
+   }
+  ]
+ },
+ "priest": {
+  "question": "牧师（2）牌面插画",
+  "kind": "portrait",
+  "role": "priest",
+  "options": [
+   {
+    "value": "s3",
+    "label": "s3",
+    "file": "out/r1/portraits/priest-s3.png",
+    "description": "评审推荐：老人举蜡烛拿书，没有十字，禁区干净",
+    "recommended": true
+   },
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/r1/portraits/priest-s1.png",
+    "description": "白色罗马领像现代神父，光从右来"
+   },
+   {
+    "value": "s4",
+    "label": "s4",
+    "file": "out/r1/portraits/priest-s4.png",
+    "description": "胸前一串金珠像念珠，表情阴沉"
+   }
+  ]
+ },
+ "baron": {
+  "question": "男爵（3）牌面插画",
+  "kind": "portrait",
+  "role": "baron",
+  "options": [
+   {
+    "value": "s4",
+    "label": "s4",
+    "file": "out/r1/portraits/baron-s4.png",
+    "description": "评审推荐：八字胡、毛皮领、手按剑柄；左上蜡烛已用代码盖掉",
+    "recommended": true,
+    "fixes": [
+     {
+      "op": "recolor-warm",
+      "box": [
+       0,
+       7,
+       14,
+       36
+      ],
+      "bg": "#0c0a1d",
+      "lum": 26
+     }
+    ]
+   },
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/r1/portraits/baron-s1.png",
+    "description": "没有剑，左上蜡烛在禁区"
+   },
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/r1/portraits/baron-s2.png",
+    "description": "光从右来，头发偏金"
+   }
+  ]
+ },
+ "handmaid": {
+  "question": "侍女（4）牌面插画",
+  "kind": "portrait",
+  "role": "handmaid",
+  "options": [
+   {
+    "value": "s3",
+    "label": "s3",
+    "file": "out/r1/portraits/handmaid-s3.png",
+    "description": "评审推荐：白头巾露出头发，不像修女，帷幕背景和整套一致",
+    "recommended": true
+   },
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/r1/portraits/handmaid-s2.png",
+    "description": "头巾包得最紧，最像修女"
+   },
+   {
+    "value": "s4",
+    "label": "s4",
+    "file": "out/r1/portraits/handmaid-s4.png",
+    "description": "背景偏黑，脸较平"
+   }
+  ]
+ },
+ "prince": {
+  "question": "王子（5）牌面插画",
+  "kind": "portrait",
+  "role": "prince",
+  "options": [
+   {
+    "value": "s8-crown-5303",
+    "label": "s8 加冠 ①",
+    "file": "out/r1/portraits/prince-s8-crown-5303.png",
+    "description": "在 s8 上用 edit-image 加了细金冠和红宝石，小牌 1× 看得见冠；上衣仍是深蓝黑色、蜡烛在右边",
+    "recommended": true
+   },
+   {
+    "value": "s8-crown-5302",
+    "label": "s8 加冠 ②",
+    "file": "out/r1/portraits/prince-s8-crown-5302.png",
+    "description": "同一张底图换种子，冠上的宝石更大"
+   },
+   {
+    "value": "s3-crown-5301",
+    "label": "s3 加冠",
+    "file": "out/r1/portraits/prince-s3-crown-5301.png",
+    "description": "光从左来和整套一致，但冠小，小牌上不如 s8 清楚"
+   }
+  ]
+ },
+ "chancellor": {
+  "question": "大臣（6）牌面插画",
+  "kind": "portrait",
+  "role": "chancellor",
+  "options": [
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/r1/portraits/chancellor-s1.png",
+    "description": "评审推荐：长灰胡子、粗金官链、卷轴，禁区干净",
+    "recommended": true
+   },
+   {
+    "value": "s4",
+    "label": "s4",
+    "file": "out/r1/portraits/chancellor-s4.png",
+    "description": "摊开的卷轴（空白），左上蜡烛被金币压住"
+   },
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/r1/portraits/chancellor-s2.png",
+    "description": "卷轴拿得像根棍子"
+   }
+  ]
+ },
+ "king": {
+  "question": "国王（7）牌面插画",
+  "kind": "portrait",
+  "role": "king",
+  "options": [
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/r1/portraits/king-s2.png",
+    "description": "评审推荐：金冠红宝石、权杖都清楚；小牌裁切改成 [14,0]，冠整个露出来",
+    "recommended": true,
+    "miniCrop": [
+     14,
+     0
+    ]
+   },
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/r1/portraits/king-s1.png",
+    "description": "正面对称，权杖像倒插的剑，左上蜡烛在禁区"
+   },
+   {
+    "value": "s3",
+    "label": "s3",
+    "file": "out/r1/portraits/king-s3.png",
+    "description": "眼睛偏红"
+   }
+  ]
+ },
+ "countess": {
+  "question": "女伯爵（8）牌面插画",
+  "kind": "portrait",
+  "role": "countess",
+  "options": [
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/r1/portraits/countess-s2.png",
+    "description": "评审推荐：黑盘发、珍珠项链、折扇；左上蜡烛已用代码盖掉",
+    "recommended": true,
+    "fixes": [
+     {
+      "op": "recolor-warm",
+      "box": [
+       0,
+       7,
+       15,
+       31
+      ],
+      "bg": "#141a27"
+     },
+     {
+      "op": "recolor-warm",
+      "box": [
+       2,
+       31,
+       11,
+       56
+      ],
+      "bg": "#141a27"
+     }
+    ]
+   },
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/r1/portraits/countess-s1.png",
+    "description": "白褶边发箍像女仆帽，会和侍女混"
+   },
+   {
+    "value": "s3",
+    "label": "s3",
+    "file": "out/r1/portraits/countess-s3.png",
+    "description": "眼睛和嘴唇有品红杂点"
+   }
+  ]
+ },
+ "princess": {
+  "question": "公主（9）牌面插画",
+  "kind": "portrait",
+  "role": "princess",
+  "options": [
+   {
+    "value": "s3-kick",
+    "label": "s3-kick",
+    "file": "out/r1/portraits/princess-s3-kick.png",
+    "description": "开工时选中的样张，评审推荐",
+    "recommended": true
+   },
+   {
+    "value": "s5",
+    "label": "s5",
+    "file": "out/r1/portraits/princess-s5.png",
+    "description": "脸偏动漫、信封太大"
+   },
+   {
+    "value": "s6",
+    "label": "s6",
+    "file": "out/r1/portraits/princess-s6.png",
+    "description": "手里的信认不出来"
+   },
+   {
+    "value": "s2-kick",
+    "label": "s2-kick",
+    "file": "out/r1/portraits/princess-s2-kick.png",
+    "description": "拿的是卷轴不是信"
+   }
+  ]
+ },
+ "night-0": {
+  "question": "夜间场景 · 宴会厅",
+  "kind": "scene",
+  "options": [
+   {
+    "value": "s11",
+    "label": "s11",
+    "file": "out/r1/scenes/night-0-s11.png",
+    "description": "评审推荐：正中壁炉 + 长餐桌，和白天 s22 是同一个构图",
+    "recommended": true
+   },
+   {
+    "value": "s12",
+    "label": "s12",
+    "file": "out/r1/scenes/night-0-s12.png",
+    "description": "很漂亮，但长椅夹着红地毯像教堂过道"
+   },
+   {
+    "value": "s13",
+    "label": "s13",
+    "file": "out/r1/scenes/night-0-s13.png",
+    "description": "构图和白天那张对不上"
+   }
+  ]
+ },
+ "night-1": {
+  "question": "夜间场景 · 书房",
+  "kind": "scene",
+  "options": [
+   {
+    "value": "s32",
+    "label": "s32",
+    "file": "out/r1/scenes/night-1-s32.png",
+    "description": "评审推荐：正中拱窗 + 两侧书架，和白天 s42 同构图",
+    "recommended": true
+   },
+   {
+    "value": "s31",
+    "label": "s31",
+    "file": "out/r1/scenes/night-1-s31.png",
+    "description": "左边缘有一只来路不明的小白鸟"
+   },
+   {
+    "value": "s33",
+    "label": "s33",
+    "file": "out/r1/scenes/night-1-s33.png",
+    "description": "构图和白天那张对不上"
+   }
+  ]
+ },
+ "day-0": {
+  "question": "白天场景 · 宴会厅",
+  "kind": "scene",
+  "options": [
+   {
+    "value": "s22",
+    "label": "s22",
+    "file": "out/r1/scenes/day-0-s22.png",
+    "description": "评审推荐：和夜间 s11 同构图",
+    "recommended": true
+   },
+   {
+    "value": "s21",
+    "label": "s21",
+    "file": "out/r1/scenes/day-0-s21.png",
+    "description": "构图和夜间那张对不上"
+   },
+   {
+    "value": "s23",
+    "label": "s23",
+    "file": "out/r1/scenes/day-0-s23.png",
+    "description": "构图和夜间那张对不上"
+   }
+  ]
+ },
+ "day-1": {
+  "question": "白天场景 · 书房",
+  "kind": "scene",
+  "options": [
+   {
+    "value": "s42",
+    "label": "s42",
+    "file": "out/r1/scenes/day-1-s42.png",
+    "description": "评审推荐：和夜间 s32 同构图",
+    "recommended": true
+   },
+   {
+    "value": "s41",
+    "label": "s41",
+    "file": "out/r1/scenes/day-1-s41.png",
+    "description": "构图和夜间那张对不上"
+   },
+   {
+    "value": "s43",
+    "label": "s43",
+    "file": "out/r1/scenes/day-1-s43.png",
+    "description": "构图和夜间那张对不上"
+   }
+  ]
+ },
+ "favor": {
+  "question": "钟情标记（小，16px）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "8",
+    "label": "favor-8",
+    "file": "out/r1/icons/favor/favor-8.png",
+    "description": "评审推荐：整个外形就是一颗心，1× 也一眼看出",
+    "recommended": true
+   },
+   {
+    "value": "5",
+    "label": "favor-5",
+    "file": "out/r1/icons/favor/favor-5.png",
+    "description": "心在盾形托里"
+   },
+   {
+    "value": "27",
+    "label": "favor-27",
+    "file": "out/r1/icons/favor/favor-27.png",
+    "description": "心在圆托里，1× 下容易读成红点金币"
+   }
+  ]
+ },
+ "favor-big": {
+  "question": "钟情标记（大，32px，结算和 +1 动画用）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "27",
+    "label": "favor-big-27",
+    "file": "out/r1/icons/favor-big/favor-big-27.png",
+    "description": "照 favor-8 出的，最像小图：金色心形托 + 红宝石",
+    "recommended": true
+   },
+   {
+    "value": "21",
+    "label": "favor-big-21",
+    "file": "out/r1/icons/favor-big/favor-big-21.png",
+    "description": "托座更细"
+   },
+   {
+    "value": "41",
+    "label": "favor-big-41",
+    "file": "out/r1/icons/favor-big/favor-big-41.png",
+    "description": "宝石更亮"
+   }
+  ]
+ }
+}

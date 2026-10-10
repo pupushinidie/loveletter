@@ -1384,10 +1384,10 @@ add("fx/snuff.png", 16, 32, 8, "simple", lambda: strip(fx_snuff()))
 add("fx/shield.png", 32, 32, 8, "simple", lambda: strip(fx_shield()))
 add("fx/duel.png", 32, 32, 6, "simple", lambda: strip(fx_duel()))
 add("fx/favor.png", 32, 32, 8, "simple", lambda: strip(fx_favor()))
-add("fx/petal.png", 8, 8, 4, "simple", lambda: strip(fx_petal()))
+add("fx/petal.png", 8, 8, 4, "code", lambda: strip(fx_petal()))  # 代码画的就是正式版
 add("ui/banner.png", 160, 32, 1, "simple", banner)
 add("ui/letter-win.png", 64, 48, 1, "simple", letter_win)
-add("ui/divider.png", 96, 8, 1, "simple", divider)
+add("ui/divider.png", 96, 8, 1, "code", divider)  # 代码画的就是正式版
 
 
 def tier(path: Path) -> str:

@@ -51,3 +51,7 @@
 {"time": "2026-10-09 18:45:14", "name": "prince-s8", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.005959769937727187}, "seconds": 22.1}
 {"time": "2026-10-09 18:45:35", "name": "prince-s9", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006292442613177829}, "seconds": 21.1}
 {"time": "2026-10-09 18:45:50", "name": "guard-s7", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.005730549361970689}, "seconds": 15.1}
+{"time": "2026-10-09 19:55:59", "name": "prince-s3-crown-5301", "endpoint": "/edit-image", "usage": {"type": "usd", "usd": 0.005494069178899129}, "seconds": 2337.7, "status": "completed"}
+{"time": "2026-10-09 19:56:13", "name": "prince-s8-crown-5302", "endpoint": "/edit-image", "usage": {"type": "usd", "usd": 0.00556996668709649}, "seconds": 13.8, "status": "completed"}
+{"time": "2026-10-09 19:57:17", "name": "prince-s8-crown-5303", "endpoint": "/edit-image", "usage": {"type": "usd", "usd": 0.005496359401279026}, "seconds": 63.4, "status": "completed"}
+{"time": "2026-10-09 19:59:51", "name": "favor-big", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 154.0, "status": "completed"}

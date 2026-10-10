@@ -6,6 +6,7 @@
     "priest": {"file": "out/r1/portraits/priest-s3.png"},
     "baron": {"file": "out/r1/portraits/baron-s4.png", "fixes": [{"op": "recolor-warm", "box": [0, 7, 14, 36], "bg": "#0c0a1d", "lum": 26}]},
     "handmaid": {"file": "out/r1/portraits/handmaid-s3.png"},
+    "prince": {"file": "out/r1/portraits/prince-s8-crown-5303.png", "_pending": "王子加冠（edit-image），待评审终审"},
     "chancellor": {"file": "out/r1/portraits/chancellor-s1.png"},
     "king": {"file": "out/r1/portraits/king-s2.png", "miniCrop": [14, 0]},
     "countess": {"file": "out/r1/portraits/countess-s2.png", "fixes": [{"op": "recolor-warm", "box": [0, 7, 15, 31], "bg": "#141a27"}, {"op": "recolor-warm", "box": [2, 31, 11, 56], "bg": "#141a27"}]},
@@ -18,7 +19,8 @@
     "day-1": "out/r1/scenes/day-1-s42.png"
   },
   "icons": {
-    "favor": {"file": "out/r1/icons/favor/favor-8.png"}
+    "favor": {"file": "out/r1/icons/favor/favor-8.png"},
+    "favor-big": {"file": "out/r1/icons/favor-big/favor-big-27.png", "_pending": "照 favor-8 出的 64 个里挑的，待评审终审"}
   },
   "seals": {},
   "deco": {}
