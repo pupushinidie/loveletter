@@ -132,6 +132,11 @@
 .tut-toast b { margin-right: 6px; color: var(--tut-gold-text, var(--gold)); font-weight: 400; }
 .tut-toast-actions { display: grid; justify-items: end; gap: 4px; }
 .app-shell .tut-toast .quiet-button { width: auto; min-height: 0; margin: 0; }
+/* 放进页面里的小贴士（TipToast 给了 host）：跟着排版走，不浮在别的东西上面 */
+.tut-toast.docked { position: static; z-index: auto; translate: none; width: auto; margin-top: auto; padding: 6px 8px; gap: 8px; cursor: pointer;
+  box-shadow: 0 0 0 var(--px) var(--edge), inset var(--px) var(--px) 0 0 var(--rim); }
+.tut-toast.docked img { width: 24px; height: 24px; }
+.tut-toast.docked .tut-toast-actions { grid-auto-flow: row; }
 
 /* ---------- 首页、等候房间的教程入口 ---------- */
 .tut-invite {

@@ -32,7 +32,7 @@ import { useLayout, type Layout } from "./layout.js";
 import { GameRoomMenu, SpectateBar } from "./RoomExtras.js";
 import { socket } from "./socket.js";
 import type { Theme } from "./theme.js";
-import { Coach, TipToast } from "./tutorial/Coach.js";
+import { Coach, isTouchDevice as isTouchLayout, TipToast } from "./tutorial/Coach.js";
 import { detectTips, GAME_ID, hintFor, TIPS, type Hint } from "./tutorial/hints.js";
 import { useFirstTimeTips } from "./tutorial/tips.js";
 
@@ -144,6 +144,12 @@ function GameBoard({
     return () => window.removeEventListener("keydown", handle);
   }, [canHint, game.version]);
   const tips = useFirstTimeTips(GAME_ID, game.version, () => detectTips(game, myId), TIPS, mode === "online" && !spectating);
+  // 「提示」按钮：出牌时在操作区标题后面，大臣留牌时在留牌框标题后面（I31：手机、平板没有键盘 H）
+  const hintButton = canHint ? (
+    <button className={shownHint ? "quiet-button ll-hint-button on" : "quiet-button ll-hint-button"} type="button" data-tutorial="hint" onClick={toggleHint}>
+      提示{!isTouchLayout() && <kbd>H</kbd>}
+    </button>
+  ) : null;
 
   // ---------- 摆法 ----------
   const oppDiscards = Math.max(0, ...opponents.map((player) => player.discards.length));
@@ -408,11 +414,7 @@ function GameBoard({
       onCancel={() => { setSel(null); setHint(""); }}
       onAuto={onAuto}
       onShowResult={() => { setResultHidden(false); setFinalHidden(false); }}
-      hintButton={canHint && game.phase === "playing" && game.stage === "play" ? (
-        <button className={shownHint ? "quiet-button ll-hint-button on" : "quiet-button ll-hint-button"} type="button" data-tutorial="hint" onClick={toggleHint}>
-          提示{!layout.mobile && <kbd>H</kbd>}
-        </button>
-      ) : null}
+      hintButton={game.phase === "playing" && game.stage === "play" ? hintButton : null}
     />
   );
 
@@ -537,7 +539,7 @@ function GameBoard({
       </div>
 
       {myTurn && !autoPlaying && game.stage === "chancellor" && (
-        <ChancellorDialog key={game.version} hand={me.hand} scale={layout.mobile ? 1 : layout.hand} onSubmit={send} />
+        <ChancellorDialog key={game.version} hand={me.hand} scale={layout.mobile ? 1 : layout.hand} onSubmit={send} hint={hintButton} />
       )}
       {sel?.card === "guard" && sel.target && canPlay && (
         <GuessDialog
@@ -570,7 +572,7 @@ function GameBoard({
           }}
         />
       )}
-      {tips.tip && <TipToast tip={tips.tip} onClose={tips.dismiss} onNever={tips.never} />}
+      {tips.tip && <TipToast tip={tips.tip} onClose={tips.dismiss} onNever={tips.never} host='[data-tutorial="action-panel"]' />}
     </div>
   );
 }

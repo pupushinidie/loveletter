@@ -84,7 +84,7 @@ export function GuessDialog({ targetName, unseen, scale, compact = false, onPick
 
 /* ---------- 大臣留牌 ---------- */
 
-export function ChancellorDialog({ hand, scale, onSubmit }: { hand: readonly Role[]; scale: number; onSubmit: (command: GameCommand) => void }) {
+export function ChancellorDialog({ hand, scale, onSubmit, hint }: { hand: readonly Role[]; scale: number; onSubmit: (command: GameCommand) => void; hint?: ReactNode }) {
   const [keep, setKeep] = useState<number | null>(null);
   const [flip, setFlip] = useState(false);
   const rest = hand.map((role, index) => ({ role, index })).filter((card) => card.index !== keep);
@@ -95,7 +95,7 @@ export function ChancellorDialog({ hand, scale, onSubmit }: { hand: readonly Rol
   };
   return (
     <Modal className="ll-chancellor" label="大臣留牌" anchor="chancellor-dialog">
-      <h2>大臣：留 1 张，{hand.length - 1} 张放回牌堆底</h2>
+      <h2>大臣：留 1 张，{hand.length - 1} 张放回牌堆底{hint}</h2>
       <p className="ll-dialog-note">放回去的牌不发动、不算弃牌（公主放回去也不会出局）。手里 3 张时不用管女伯爵。</p>
       <div className="ll-chancellor-cards" data-tutorial="chancellor-panel">
         {hand.map((role, index) => (

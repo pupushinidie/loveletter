@@ -63,8 +63,6 @@ export const TIPS = {
   shielded: { title: "别人都受侍女保护", text: "卫兵、牧师、男爵、国王打出去会白打，王子只能选自己。" },
   princess: { title: "你拿到了公主", text: "公主打出或被王子弃掉都会立刻出局；牌堆抽完时她最大。" },
   out: { title: "你出局了", text: "这一小局看别人打，下一局再来。出局时手牌亮出来，不发动效果。" },
-  tie: { title: "平局：都算赢", text: "牌堆抽完时点数一样大的人，各拿 1 枚钟情标记。" },
-  "spy-self": { title: "间谍 +1！", text: "这一小局结束时，还在局中的人里只有你打过间谍，额外拿 1 枚。" },
   timeout: { title: "超时了", text: "这一回合由人机替你打完；连续 2 次超时会进托管，点「取消托管」就收回。" },
 } as const;
 
@@ -78,10 +76,7 @@ export function detectTips(game: GameState, selfId: string): string[] {
     if (event.type === "Eliminated" && event.player === selfId) ids.push("out");
     if (event.type === "Peeked" && event.target === selfId) ids.push("peeked");
     if (event.type === "Swapped" && event.target === selfId) ids.push("swapped");
-    if (event.type === "RoundEnded") {
-      if (event.result.spyBonus === selfId) ids.push("spy-self");
-      if (event.result.reason === "showdown" && event.result.winners.length > 1) ids.push("tie");
-    }
+    // 一小局结束时的事（平局都赢、间谍 +1）结算弹窗里写着，小贴士又会被弹窗盖住，所以不出（I24）
   }
   const myTurn = game.phase === "playing" && game.players[game.current]?.id === selfId && game.stage === "play";
   if (myTurn) {

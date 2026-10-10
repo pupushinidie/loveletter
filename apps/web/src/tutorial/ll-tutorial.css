@@ -58,3 +58,8 @@
   .ll-room .tut-invite { padding: 8px 12px; }
   .ll-room .tut-invite-copy span { display: none; }
 }
+
+/* 「第一次」小贴士放在操作区里（首发验收 I24）：顶替「刚才」那几行；正在出牌（有选人、按钮）或者有弹窗时先收起，免得挤掉按钮、压在弹窗下面 */
+.ll-action:has(.tut-toast) .ll-recent { display: none; }
+.ll-action:has(.ll-targets, .ll-action-buttons) .tut-toast,
+.app-shell:has(.gm-modal-backdrop) .ll-action .tut-toast { display: none; }

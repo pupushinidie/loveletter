@@ -6,6 +6,7 @@
  * 必须渲染在 .app-shell 里面（要用那里定义的颜色变量和像素描边粗细 --px）。
  */
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ARROW, GULU, GULU_ICON, GULU_SPARKLES, type GuluFace } from "./gulu.js";
 import "./tutorial.css";
 
@@ -248,10 +249,25 @@ export interface Tip {
   readonly text: string;
 }
 
-/** 真实对局里「第一次遇到」的小贴士：顶上一条，不挡操作。 */
-export function TipToast({ tip, onClose, onNever }: { tip: Tip; onClose: () => void; onNever: () => void }) {
-  return (
-    <div className="tut-toast" role="status">
+/**
+ * 真实对局里「第一次遇到」的小贴士。
+ * 不给 host：浮在屏幕顶上一条（欲罢不能）。给 host（CSS 选择器）：放进那个元素里、跟着页面排版（docked），
+ * 一点都不盖别的东西，点一下任意地方就收起（情书首发验收 I24：浮着的贴士盖住了轮到谁、倒计时、对手名牌）。
+ */
+export function TipToast({ tip, onClose, onNever, host }: { tip: Tip; onClose: () => void; onNever: () => void; host?: string }) {
+  const [target, setTarget] = useState<Element | null>(null);
+  useEffect(() => {
+    if (!host) return;
+    const find = () => setTarget((old) => {
+      const found = document.querySelector(host);
+      return found === old ? old : found;
+    });
+    find();
+    const timer = window.setInterval(find, 300);
+    return () => window.clearInterval(timer);
+  }, [host]);
+  const body = (
+    <div className={host ? "tut-toast docked" : "tut-toast"} role="status" onClick={host ? onClose : undefined} title={host ? "点一下收起" : undefined}>
       <img src={GULU_ICON} alt="" />
       <p><b>{tip.title}</b>{tip.text}</p>
       <div className="tut-toast-actions">
@@ -260,6 +276,8 @@ export function TipToast({ tip, onClose, onNever }: { tip: Tip; onClose: () => v
       </div>
     </div>
   );
+  if (!host) return body;
+  return target ? createPortal(body, target) : null;
 }
 
 export { GULU_ICON };
