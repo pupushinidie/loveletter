@@ -9,7 +9,7 @@
 ```bash
 npm install
 npm run dev          # 服务器 :3017，网页 :5190
-npm test             # 139 项：规则书用例 90、2–6 人各 300 整场随机对局、隐藏信息、预览局面、服务器 19
+npm test             # 规则书用例、随机对局、隐藏信息、预览局面、随机数、人机、规则核对、教程剧本、服务器（含安全）
 npm run typecheck    # 规则包、测试、服务器、网页
 BASE_PATH=/loveletter/ npm run build
 ```
@@ -148,18 +148,19 @@ BASE_PATH=/loveletter/ npm run build
 
 | 函数 | 说明 |
 |---|---|
-| `createGame(players, seed?, { config?, starter?, deal? })` | 开一场。`deal: { setAside, faceUp?, hands, deck }` 指定第一小局怎么发（deck 顶在前，四部分正好 21 张）；`starter` 指定先手座位 |
+| `createGame(players, seed?, { config?, starter?, deal? })` | 开一场。`seed` 是 `Seed`（4 个 32 位整数的 128 位种子；测试、教程、预览可以传一个数字，会展开成 128 位），不传就用 crypto 随机生成。`deal: { setAside, faceUp?, hands, deck }` 指定第一小局怎么发（deck 顶在前，四部分正好 21 张）；`starter` 指定先手座位 |
 | `apply(state, playerId, command, rng) → { state, events }` | 纯函数，不改输入；只能用在完整状态上。rng 只在小局结束（并列抽先手）和开新一局（洗牌）时用 |
-| `applyCommand(state, playerId, command)` | 服务器用：随机数接着 `state.rngState`，命令记进 `actions` |
+| `applyCommand(state, playerId, command, rng?)` | 执行命令并记进 `actions`。**服务器每次都传一个新的 crypto 随机数** `createRng(crypto 128 位)`；用到它的那一步（小局结束并列抽先手、开新一局洗牌）在 `actions` 里带上它的 `seed`，能重放。不传 rng 时从 `state.rngState` 接着取（测试、教程、预览，可复现） |
 | `legalActions(state, playerId)` | 现在能发的所有命令（同名牌只列一次）；裁剪过的视角也能用 |
 | `redactGameForViewer(state, viewerId, { seeAllHands? })` | 某个座位看到的状态；观战传 `""`，房主开了「观战看手牌」再加 `{ seeAllHands: true }` |
-| `timeoutTurn(state, choose?)` | 超时：替当前玩家走完整个回合；`choose(view, playerId)` 默认是 `timeoutCommand`，只拿到裁剪后的视角，给出不合法的命令时退回固定动作。结算画面超时就开下一局 |
+| `timeoutTurn(state, choose?, rng?)` | 超时：替当前玩家走完整个回合；`choose(view, playerId)` 默认是 `timeoutCommand`，只拿到裁剪后的视角，给出不合法的命令时退回固定动作。结算画面超时就开下一局。`rng` 同 `applyCommand` |
 | `timeoutCommand(view, playerId)` | 固定动作（见上面「超时」） |
 | `actorOf(state)` | 此刻要做决定的人（结算画面、整场结束时是 null） |
 | `timerKey(state)` / `timerSeconds(state)` | 服务器计时用：每个回合的每一步一个 key；结算画面一小局一个 |
 | `targetChoices(state, actorId, card)` | 打这张牌能选谁（下家开始的座位顺序；王子把自己放最后） |
 | `mustPlayCountess(hand)` | 女伯爵强制 |
 | `visibleCounts(state)` / `unseenCounts(state, viewerId)` | 本小局公开的牌各几张 / 从某座位看还没露面的各几张（界面的剩余张数统计、人机记牌） |
+| `createRng(seed)` / `restoreRng(state)` / `randomSeed()` | 随机数（`rng.ts`）：sfc32，状态 128 位；`randomSeed()` 用 `crypto.getRandomValues` 生成 4 个 32 位整数。`Rng` 有 `next/int/pick/shuffle`，`state`、`seed`（4 个整数）和 `draws` |
 | `botCommand(view, playerId, random?)` | 人机这一步的命令，只吃裁剪后的视角（给完整状态会报错） |
 | `botHint(view, playerId, random?)` / `botDecision` | 返回 `{ command, reason }`：人机会怎么打、一句第二人称的理由（教程「提示」按钮用）。理由会提到牧师看到的牌，**只在本人浏览器里算、只给本人看**，不要发到服务器、聊天或日志 |
 
@@ -225,6 +226,14 @@ createScene({ hands: [["guard", "baron"]], protected: [1], discards: [[], ["hand
 继承欲罢不能的全站房间功能：建房、房间码、自由入座、断线用原昵称回座、踢人、解散、再来一局、聊天、语音信令、观战和公开房间（`room:access`，观战默认只看公开信息，房主可以打开「观战看手牌」）、管理员列表和解散（`lobby:get`、`admin:dissolve`）、挤登录（`admin:kick-session`）、加人机和托管（`room:add-bot`、`room:auto`）。每场的种子和动作序列写进 `logs/games.jsonl`。
 
 测试用的环境变量：`TURN_MS`（每一步的限时，毫秒）、`BOT_DELAY_SCALE=0`（人机立刻行动）。
+
+### 安全（首发验收 I8、I9 返工，2026-10-09）
+
+- **随机数（I8）**：以前是 32 位种子 + mulberry32、整场从同一条随机数流里接着取，玩家拿自己看得到的牌约 30 秒就能穷举出种子、预测之后每一小局的牌。现在：开局种子由 `node:crypto` 生成 128 位（`cryptoSeed()`）；**每执行一个命令都传一个新的 crypto 随机数**（`freshRng()`）进 `applyCommand` / `timeoutTurn`，所以每开一小局洗牌、并列抽先手都用新注入的 128 位随机数，和上一局毫无关系。引擎仍是纯函数，随机数从参数传进来；预览局面和教程的固定牌序不变（`createScene` 补牌沿用旧的洗牌，结果一张不变）。验收的攻击脚本 `seed-attack.mjs` 对修好后的服务器在 2^32 里找不到任何候选。
+- **事件处理（I9）**：以前每个处理函数裸调 `ack()`，客户端不带回执发任何事件就抛 `TypeError` 把进程带崩、所有房间丢失。现在所有客户端事件都通过 `listen(socket, event, handler)` 注册：按 `EVENT_SHAPES`（每个事件几个参数、有没有回执，漏写编译不过）整理参数，回执不是函数就换成空函数、只回一次；处理函数抛出的异常按连接接住、记日志，回执告诉客户端「服务器出错了」。计时器回调和断线清理都用 `safely()` 包一层；进程级 `uncaughtException` / `unhandledRejection` 只记日志、不退出（退出会丢掉这个进程上所有对局）。测试 `apps/server/test/security.test.ts`：22 个事件 × 房间外/等候/对局中 × 21 种乱参数，带不带回执各发一遍（3000+ 次），服务器活着、另一桌照常打；故障注入证明处理函数、计时器、断线清理里的异常都接住。
+- **全站移植**（同一模板的游戏都有这两个问题）：
+  1. 服务器：照抄 `EVENT_SHAPES` + `listen()` + `safely()`，把 `io.on("connection")` 里所有 `socket.on("事件", …)` 换成 `listen(socket, "事件", …)`，`socket.on("disconnect", …)` 和所有 `setTimeout` 回调包 `safely()`，主入口加两行进程级兜底；拷 `security.test.ts` 的 I9 部分，改开头的建桌函数。
+  2. 规则包：`rng.ts` 换成这一版（128 位，`createRng(number)` 照样能用，测试不用改）；`createGame` 默认种子改成 `randomSeed()`；`applyCommand` / `timeoutTurn` 加可选的 `rng` 参数；服务器 `newGame` 用 crypto 种子、每次 `applyCommand` / `timeoutTurn` 传 `freshRng()`。种子字段从 number 变成 4 个整数，`logs/games.jsonl` 的格式跟着变。
 
 ## 目录
 

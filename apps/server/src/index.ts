@@ -1,15 +1,16 @@
-import { createHash, createHmac, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 import { appendFile, mkdir } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { Server } from "socket.io";
+import { Server, type Socket } from "socket.io";
 import {
   actorOf,
   applyCommand,
   botCommand,
   CAPACITY_OPTIONS,
   createGame,
+  createRng,
   DEFAULT_ROOM_ACCESS,
   redactGameForViewer,
   timeoutTurn,
@@ -26,6 +27,8 @@ import {
   type PublicRoomSummary,
   type RoomAccess,
   type RoomChatMessage,
+  type Rng,
+  type Seed,
   type ServerToClientEvents,
   type Spectator,
   type VoiceSignal,
@@ -89,6 +92,43 @@ const rooms = new Map<string, RoomState>();
 const socketRooms = new Map<string, string>();
 const roomChatTimes = new Map<string, number>();
 const adminFailureTimes = new Map<string, number>();
+
+/**
+ * 随机数（首发验收 I8）：种子是 node:crypto 生成的 128 位；每执行一个命令都传一个新的 crypto 随机数进引擎，
+ * 每开一小局洗牌、并列赢家里抽先手都用新注入的随机数，玩家没法拿看得到的牌反推种子、预测后面的牌。
+ */
+function cryptoSeed(): number[] {
+  const bytes = randomBytes(16);
+  return [bytes.readUInt32LE(0), bytes.readUInt32LE(4), bytes.readUInt32LE(8), bytes.readUInt32LE(12)];
+}
+
+function freshRng(): Rng {
+  return createRng(cryptoSeed());
+}
+
+/**
+ * 测试用的故障注入（testHooks.injectFault）：下一次处理这个事件（或下一个计时器回调，"timer"）时故意抛错，
+ * 用来验证出错时服务器不会退出。线上永远是 null。
+ */
+let injectedFault: string | null = null;
+
+/**
+ * 计时器回调（超时、人机、继续投票、关房、首页列表推送）和断线清理出错时只记日志，不能把进程带崩（首发验收 I9）。
+ * faultKey 只给测试的故障注入用。
+ */
+function safely(label: string, callback: () => void, faultKey = "timer"): () => void {
+  return () => {
+    try {
+      if (injectedFault === faultKey) {
+        injectedFault = null;
+        throw new Error("测试注入的故障");
+      }
+      callback();
+    } catch (error) {
+      console.error(`${label}出错（服务器继续运行）`, error);
+    }
+  };
+}
 
 export const httpServer = createServer((request, response) => {
   if (request.url === "/health") {
@@ -281,10 +321,10 @@ function emitLobbyUpdate(): void {
     }
     lobbyUpdatePending = false;
     sendLobbyUpdate();
-    lobbyUpdateTimer = setTimeout(flush, LOBBY_UPDATE_INTERVAL_MS);
+    lobbyUpdateTimer = setTimeout(safely("推送首页列表", flush), LOBBY_UPDATE_INTERVAL_MS);
     lobbyUpdateTimer.unref();
   };
-  lobbyUpdateTimer = setTimeout(flush, LOBBY_UPDATE_INTERVAL_MS);
+  lobbyUpdateTimer = setTimeout(safely("推送首页列表", flush), LOBBY_UPDATE_INTERVAL_MS);
   lobbyUpdateTimer.unref();
 }
 
@@ -346,10 +386,10 @@ function removeWaitingMember(socketId: string): void {
 /** 所有玩家离线满 ROOM_ABANDON_MS 后关闭房间；期间有人重新加入则取消。 */
 function scheduleAbandonedRoomClose(room: RoomState): void {
   clearTimeout(room.abandonTimer);
-  room.abandonTimer = setTimeout(() => {
+  room.abandonTimer = setTimeout(safely("关闭没人的房间", () => {
     if (rooms.get(room.code) !== room || humans(room).some((member) => member.connected)) return;
     deleteRoom(room, "玩家都离线了，房间已关闭。");
-  }, ROOM_ABANDON_MS);
+  }), ROOM_ABANDON_MS);
   room.abandonTimer.unref();
 }
 
@@ -424,7 +464,7 @@ function clearGameTimers(room: RoomState): void {
 
 function setTurnDeadline(room: RoomState, deadline: number, key: string): void {
   clearTurnTimer(room);
-  const timer = setTimeout(() => expireTurn(room), Math.max(0, deadline - Date.now()));
+  const timer = setTimeout(safely("超时处理", () => expireTurn(room)), Math.max(0, deadline - Date.now()));
   timer.unref();
   room.turn = { deadline, timer, key };
 }
@@ -446,7 +486,7 @@ function updateTurnTimer(room: RoomState): void {
     clearTurnTimer(room);
     if (room.botTimer?.key === key) return;
     clearBotTimer(room);
-    const timer = setTimeout(() => runBot(room, key), botDelay(room, game, actorId) * BOT_DELAY_SCALE);
+    const timer = setTimeout(safely("人机行动", () => runBot(room, key)), botDelay(room, game, actorId) * BOT_DELAY_SCALE);
     timer.unref();
     room.botTimer = { timer, key };
     return;
@@ -482,10 +522,10 @@ function runBot(room: RoomState, key: string): void {
   if (!actorId || !robotSeat(room, actorId)) return;
   try {
     const command = botCommand(redactGameForViewer(game, actorId), actorId);
-    room.game = command ? applyCommand(game, actorId, command) : timeoutTurn(game);
+    room.game = command ? applyCommand(game, actorId, command, freshRng()) : timeoutTurn(game, undefined, freshRng());
   } catch (error) {
     console.error("人机行动失败，按超时处理", error);
-    room.game = timeoutTurn(game);
+    room.game = timeoutTurn(game, undefined, freshRng());
   }
   afterGameChange(room);
   emitRoomUpdate(room);
@@ -501,7 +541,7 @@ function expireTurn(room: RoomState): void {
     if (count >= AUTO_AFTER_TIMEOUTS) setAuto(room, playerId, true);
   }
   // 超时：由人机替他走完整个回合（只吃他的裁剪视角，只记 1 次超时；人机给不出合法命令时退回固定动作）
-  room.game = timeoutTurn(room.game, botCommand);
+  room.game = timeoutTurn(room.game, botCommand, freshRng());
   afterGameChange(room);
   emitRoomUpdate(room);
 }
@@ -514,7 +554,7 @@ function afterGameChange(room: RoomState): void {
   const game = room.game;
   if (game?.phase === "roundEnd") {
     const online = room.members.filter((member) => member.connected && !member.bot && !member.auto).map((member) => member.playerId);
-    if (online.length > 0 && online.every((id) => game.ready.includes(id))) room.game = timeoutTurn(game);
+    if (online.length > 0 && online.every((id) => game.ready.includes(id))) room.game = timeoutTurn(game, undefined, freshRng());
   }
   if (room.game?.phase === "finished") {
     clearGameTimers(room);
@@ -526,15 +566,15 @@ function afterGameChange(room: RoomState): void {
   updateTurnTimer(room);
 }
 
-/** 种子用服务端的安全随机数生成；洗牌都在服务端。新的一场托管和超时次数都清零。 */
-function newGame(room: RoomState, seed = randomInt(2 ** 32 - 1)): GameState {
+/** 种子用服务端的 crypto 生成（128 位）；洗牌都在服务端。新的一场托管和超时次数都清零。 */
+function newGame(room: RoomState, seed: Seed = cryptoSeed()): GameState {
   for (const member of room.members) setAuto(room, member.playerId, false);
   room.timeouts.clear();
   clearGameTimers(room);
   return createGame(room.members.map((member) => ({ id: member.playerId, name: member.name })), seed);
 }
 
-/** 记录一局的种子、玩家和动作序列，同一种子重放这串动作就能复现整局。 */
+/** 记录一场的开局种子、玩家和动作序列（用到服务器随机数的那一步带着它的种子），按这些重放就能复现整场。 */
 async function logFinishedGame(game: GameState): Promise<void> {
   try {
     await mkdir(dirname(GAME_LOG), { recursive: true });
@@ -554,12 +594,12 @@ async function logFinishedGame(game: GameState): Promise<void> {
 /** 整轮结束：所有人需在 REMATCH_TIMEOUT_MS 内确认是否继续。 */
 function startRematchVote(room: RoomState): void {
   clearTimeout(room.rematch?.timer);
-  const timer = setTimeout(() => {
+  const timer = setTimeout(safely("再来一局投票到点", () => {
     if (rooms.get(room.code) !== room || !room.rematch) return;
     const accepted = room.rematch.accepted;
     const pending = room.members.filter((member) => !accepted.has(member.id)).map((member) => member.id);
     returnToWaiting(room, pending, "没有在 1 分钟内确认继续，已被移出房间。");
-  }, REMATCH_TIMEOUT_MS);
+  }), REMATCH_TIMEOUT_MS);
   timer.unref();
   // 人机总是同意再来一局
   const bots = room.members.filter((member) => member.bot).map((member) => member.id);
@@ -632,23 +672,88 @@ function invalidNameMessage(payload: CreateRoomPayload | JoinRoomPayload): strin
  */
 const socketsBySession = new Map<string, Set<string>>();
 
+type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+
+/**
+ * 每个客户端事件带几个参数、有没有回执（首发验收 I9）。新加事件时这里不写就编译不过。
+ * listen() 按这张表整理参数：多出来的参数丢掉，参数位置上的函数换成 undefined，回执不是函数就换成空函数。
+ */
+const EVENT_SHAPES: { readonly [E in keyof ClientToServerEvents]: { readonly args: number; readonly ack: boolean } } = {
+  "room:create": { args: 1, ack: true },
+  "room:join": { args: 1, ack: true },
+  "room:start": { args: 0, ack: true },
+  "room:leave": { args: 0, ack: true },
+  "game:command": { args: 1, ack: true },
+  "room:chat": { args: 1, ack: true },
+  "lobby:get": { args: 0, ack: true },
+  "room:rematch": { args: 1, ack: true },
+  "room:kick": { args: 1, ack: true },
+  "room:access": { args: 1, ack: true },
+  "room:sit": { args: 0, ack: true },
+  "room:stand": { args: 0, ack: true },
+  "room:dissolve": { args: 0, ack: true },
+  "room:add-bot": { args: 0, ack: true },
+  "room:auto": { args: 1, ack: true },
+  "admin:verify": { args: 1, ack: true },
+  "admin:dissolve": { args: 1, ack: true },
+  "admin:kick-session": { args: 1, ack: true },
+  "voice:join": { args: 1, ack: true },
+  "voice:mute": { args: 1, ack: true },
+  "voice:leave": { args: 0, ack: true },
+  "voice:signal": { args: 1, ack: false },
+};
+
+/**
+ * 注册客户端事件的唯一入口（首发验收 I9：以前裸调 ack()，客户端不带回执发事件就抛 TypeError 把进程带崩）。
+ * - safeAck：客户端没带回执（或者回执位置上不是函数）时用空函数；同一个事件只回一次；回执本身出错也接住。
+ * - 处理函数抛出的异常按连接接住、记日志，回执里告诉客户端「服务器出错了」，房间和别的连接都不受影响。
+ */
+function listen<E extends keyof ClientToServerEvents>(socket: GameSocket, event: E, handler: ClientToServerEvents[E]): void {
+  const shape = EVENT_SHAPES[event];
+  socket.on(event, ((...raw: unknown[]) => {
+    const last = raw[raw.length - 1];
+    const clientAck = shape.ack && typeof last === "function" ? (last as (response: unknown) => void) : undefined;
+    let answered = false;
+    const ack = (response: unknown) => {
+      if (answered || !clientAck) return;
+      answered = true;
+      try {
+        clientAck(response);
+      } catch (error) {
+        console.error(`回执「${event}」出错（连接 ${socket.id}）`, error);
+      }
+    };
+    const args = Array.from({ length: shape.args }, (_, index) => (typeof raw[index] === "function" ? undefined : raw[index]));
+    try {
+      if (injectedFault === event) {
+        injectedFault = null;
+        throw new Error("测试注入的故障");
+      }
+      (handler as (...params: unknown[]) => void)(...args, ...(shape.ack ? [ack] : []));
+    } catch (error) {
+      console.error(`处理「${event}」出错（连接 ${socket.id}，服务器继续运行）`, error);
+      ack({ ok: false, error: "服务器出错了，请稍后再试。" });
+    }
+  }) as never);
+}
+
 io.on("connection", (socket) => {
   const loginSession = socket.handshake.headers["x-gc-session"];
   if (typeof loginSession === "string" && loginSession) {
     const sockets = socketsBySession.get(loginSession) ?? new Set<string>();
     sockets.add(socket.id);
     socketsBySession.set(loginSession, sockets);
-    socket.on("disconnect", () => {
+    socket.on("disconnect", safely("断线清理（登录记录）", () => {
       sockets.delete(socket.id);
       if (sockets.size === 0 && socketsBySession.get(loginSession) === sockets) socketsBySession.delete(loginSession);
-    });
+    }, "disconnect"));
   }
 
-  socket.on("lobby:get", (ack) => {
+  listen(socket, "lobby:get", (ack) => {
     ack({ ok: true, data: roomSummaries() });
   });
 
-  socket.on("room:create", (payload, ack) => {
+  listen(socket, "room:create", (payload, ack) => {
     if (socketRooms.has(socket.id)) {
       ack({ ok: false, error: "请先离开当前房间，再创建新房间。" });
       return;
@@ -698,7 +803,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:join", (payload, ack) => {
+  listen(socket, "room:join", (payload, ack) => {
     if (socketRooms.has(socket.id)) {
       ack({ ok: false, error: "请先离开当前房间，再加入新房间。" });
       return;
@@ -807,7 +912,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:access", (settings, ack) => {
+  listen(socket, "room:access", (settings, ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room || room.ownerId !== socket.id) {
       ack({ ok: false, error: "只有房主可以修改房间设置。" });
@@ -833,7 +938,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:sit", (ack) => {
+  listen(socket, "room:sit", (ack) => {
     const room = findRoomForSocket(socket.id);
     const spectator = room?.spectators.find((candidate) => candidate.id === socket.id);
     if (!room || !spectator) {
@@ -859,7 +964,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:stand", (ack) => {
+  listen(socket, "room:stand", (ack) => {
     const room = findRoomForSocket(socket.id);
     const member = room?.members.find((candidate) => candidate.id === socket.id);
     if (!room || !member) {
@@ -886,7 +991,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:start", (ack) => {
+  listen(socket, "room:start", (ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room) {
       ack({ ok: false, error: "你当前不在房间中。" });
@@ -918,7 +1023,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("room:leave", (ack) => {
+  listen(socket, "room:leave", (ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room) {
       ack({ ok: false, error: "你当前不在房间中。" });
@@ -934,7 +1039,7 @@ io.on("connection", (socket) => {
     ack({ ok: true, data: undefined });
   });
 
-  socket.on("game:command", (command, ack) => {
+  listen(socket, "game:command", (command, ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room || room.status !== "playing" || !room.game) {
       ack({ ok: false, error: "当前没有进行中的对局。" });
@@ -947,7 +1052,7 @@ io.on("connection", (socket) => {
 
     try {
       const playerId = seatOf(room, socket.id);
-      room.game = applyCommand(room.game, playerId, command);
+      room.game = applyCommand(room.game, playerId, command, freshRng());
       // 自己动了一下：超时次数清零，托管也取消
       room.timeouts.delete(playerId);
       setAuto(room, playerId, false);
@@ -961,7 +1066,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("room:rematch", (accept, ack) => {
+  listen(socket, "room:rematch", (accept, ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room?.rematch || !room.members.some((member) => member.id === socket.id)) {
       ack({ ok: false, error: "现在不需要确认。" });
@@ -982,7 +1087,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:kick", (memberId, ack) => {
+  listen(socket, "room:kick", (memberId, ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room || room.ownerId !== socket.id) {
       ack({ ok: false, error: "只有房主可以移出玩家。" });
@@ -1010,7 +1115,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:add-bot", (ack) => {
+  listen(socket, "room:add-bot", (ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room || room.ownerId !== socket.id) {
       ack({ ok: false, error: "只有房主可以加人机。" });
@@ -1034,7 +1139,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:auto", (enabled, ack) => {
+  listen(socket, "room:auto", (enabled, ack) => {
     const room = findRoomForSocket(socket.id);
     const member = room?.members.find((candidate) => candidate.id === socket.id);
     if (!room || !member || room.status !== "playing" || !room.game) {
@@ -1049,7 +1154,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("room:dissolve", (ack) => {
+  listen(socket, "room:dissolve", (ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room || room.ownerId !== socket.id) {
       ack({ ok: false, error: "只有房主可以解散房间。" });
@@ -1059,12 +1164,12 @@ io.on("connection", (socket) => {
     dissolveRoom(room, "房主解散了房间。");
   });
 
-  socket.on("admin:verify", (token, ack) => {
+  listen(socket, "admin:verify", (token, ack) => {
     const error = checkAdminToken(socket.id, token);
     ack(error ? { ok: false, error } : { ok: true, data: undefined });
   });
 
-  socket.on("admin:kick-session", (payload, ack) => {
+  listen(socket, "admin:kick-session", (payload, ack) => {
     const error = checkAdminToken(socket.id, payload?.token);
     if (error) {
       ack({ ok: false, error });
@@ -1082,7 +1187,7 @@ io.on("connection", (socket) => {
     ack({ ok: true, data: kicked });
   });
 
-  socket.on("admin:dissolve", (payload, ack) => {
+  listen(socket, "admin:dissolve", (payload, ack) => {
     const error = checkAdminToken(socket.id, payload?.token);
     if (error) {
       ack({ ok: false, error });
@@ -1097,7 +1202,7 @@ io.on("connection", (socket) => {
     ack({ ok: true, data: undefined });
   });
 
-  socket.on("voice:join", (payload, ack) => {
+  listen(socket, "voice:join", (payload, ack) => {
     const room = findRoomForSocket(socket.id);
     if (!room) {
       ack({ ok: false, error: "你当前不在房间中。" });
@@ -1112,7 +1217,7 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("voice:mute", (muted, ack) => {
+  listen(socket, "voice:mute", (muted, ack) => {
     const room = findRoomForSocket(socket.id);
     const state = room?.voice.get(socket.id);
     if (!room || !state) {
@@ -1124,13 +1229,13 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("voice:leave", (ack) => {
+  listen(socket, "voice:leave", (ack) => {
     const room = findRoomForSocket(socket.id);
     if (room?.voice.delete(socket.id)) emitRoomUpdate(room);
     ack({ ok: true, data: undefined });
   });
 
-  socket.on("voice:signal", (payload) => {
+  listen(socket, "voice:signal", (payload) => {
     // 只在同一房间、都在语音里的两人之间转发。
     const room = findRoomForSocket(socket.id);
     if (!room || !room.voice.has(socket.id) || !room.voice.has(payload?.to) || payload.to === socket.id) return;
@@ -1138,7 +1243,7 @@ io.on("connection", (socket) => {
     io.to(payload.to).emit("voice:signal", { from: socket.id, data: payload.data });
   });
 
-  socket.on("room:chat", (payload, ack) => {
+  listen(socket, "room:chat", (payload, ack) => {
     const room = findRoomForSocket(socket.id);
     const member = room?.members.find((candidate) => candidate.id === socket.id)
       ?? room?.spectators.find((candidate) => candidate.id === socket.id);
@@ -1167,11 +1272,11 @@ io.on("connection", (socket) => {
     emitRoomUpdate(room);
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", safely("断线清理", () => {
     roomChatTimes.delete(socket.id);
     adminFailureTimes.delete(socket.id);
     removeWaitingMember(socket.id);
-  });
+  }, "disconnect"));
 });
 
 /** 仅供测试：直接把某个房间的对局标记为结束并发起继续投票。 */
@@ -1185,7 +1290,7 @@ export const testHooks = {
     emitRoomUpdate(room);
   },
   /** 用指定种子重开当前对局，方便测试固定开局。 */
-  reseed(code: string, seed: number): void {
+  reseed(code: string, seed: Seed): void {
     const room = rooms.get(code);
     if (!room) throw new Error("no room");
     room.game = newGame(room, seed);
@@ -1212,9 +1317,25 @@ export const testHooks = {
   fullGame(code: string): GameState | undefined {
     return rooms.get(code)?.game;
   },
+  /** 下一次处理这个客户端事件（或下一个计时器回调 "timer"、断线清理 "disconnect"）时故意抛错，验证服务器不会退出。 */
+  injectFault(target: keyof ClientToServerEvents | "timer" | "disconnect"): void {
+    injectedFault = target;
+  },
+  /** 注入的故障触发过了没有（触发后清空）。 */
+  faultPending(): boolean {
+    return injectedFault !== null;
+  },
+  /** 服务器认识的全部客户端事件（测试逐个打一遍用）。 */
+  clientEvents(): (keyof ClientToServerEvents)[] {
+    return Object.keys(EVENT_SHAPES) as (keyof ClientToServerEvents)[];
+  },
 };
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  // 最后一道兜底（首发验收 I9）：所有客户端事件和计时器都已经各自接住异常，走到这里说明还有漏网的 bug。
+  // 只记日志、不退出：退出会让这个进程上所有房间的对局全部丢失，比带着一个出错的房间继续跑更糟。
+  process.on("uncaughtException", (error) => console.error("未接住的异常（服务器继续运行）", error));
+  process.on("unhandledRejection", (reason) => console.error("未处理的 Promise 拒绝（服务器继续运行）", reason));
   const port = Number(process.env.PORT ?? process.env.SERVER_PORT ?? 3017);
   httpServer.listen(port, () => {
     console.log(`Love Letter server listening on http://localhost:${port}`);
