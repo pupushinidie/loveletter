@@ -9,7 +9,8 @@ const options = {
   path: `${import.meta.env.BASE_URL}socket.io`,
   autoConnect: false,
   reconnection: true,
-  reconnectionAttempts: 8,
+  // 断网多久都一直重连（重连上以后 App 会自动回到座位，见 seat.ts）
+  reconnectionAttempts: Infinity,
 };
 
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = serverUrl

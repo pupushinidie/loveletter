@@ -606,3 +606,11 @@
 .ll-dialog-auto { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; padding: 6px 10px; color: var(--gold); background: #3a2c10; }
 .ll-dialog-auto span { font-size: 12px; }
 .app-shell .ll-dialog-auto .quiet-button { min-height: 40px; padding: 0 14px; font-size: 24px; white-space: nowrap; }
+
+/* 断线重连 / 回到座位中（I18）：固定在顶上，盖在牌桌和弹窗上面 */
+.ll-reconnect {
+  position: fixed; z-index: 1300; top: 8px; left: 50%; display: flex; align-items: center; gap: 10px; padding: 8px 16px;
+  color: #fff1b8; background: #6e1020; transform: translateX(-50%); font-family: "Fusion Pixel", sans-serif; font-size: 24px; line-height: 1; white-space: nowrap;
+  box-shadow: 0 0 0 2px #0a0304, inset 2px 2px 0 0 #f25c5c, 0 6px 0 0 rgba(0, 0, 0, 0.35);
+}
+.ll-reconnect .spinner { width: 16px; height: 16px; border: 3px solid rgba(255, 241, 184, 0.35); border-top-color: #fff1b8; border-radius: 0; animation: spin 0.8s steps(8) infinite; }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { CAPACITY_OPTIONS, ROLE_COUNT, ROLE_NAME, ROLES, type Capacity, type GameCommand, type LobbyRoomSnapshot, type PublicRoomSummary } from "@loveletter/game";
 import { art, seatHex } from "./art.js";
 import { Card, Mini, RoleTip } from "./Cards.js";
@@ -9,6 +9,7 @@ import OnlineRooms from "./OnlineRooms.js";
 import RoomChat from "./RoomChat.js";
 import { roomRole, RoomSettingsPanel, SeatSwitch } from "./RoomExtras.js";
 import { socket } from "./socket.js";
+import { forgetSeat, readName, readSeat, rememberName, rememberSeat, retryable } from "./seat.js";
 import { ThemeToggle, useTheme, type Theme } from "./theme.js";
 import { GAME_ID } from "./tutorial/hints.js";
 import { TutorialInvite } from "./tutorial/Invite.js";
@@ -29,7 +30,7 @@ function normalizeRoomCode(value: string): string {
 
 function App() {
   const [mode, setMode] = useState<EntryMode>("create");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(readName);
   const [capacity, setCapacity] = useState<Capacity>(4);
   const [confirmAction, confirmDialog] = useConfirm();
   // 白天 / 夜间画面：首页、等候房间、牌桌共用，顶栏按钮随时切换；和游戏中心、其他游戏共用同一个选择。
@@ -74,18 +75,60 @@ function App() {
     });
   }, [room === null]);
 
+  // ---------- 断线 / 刷新后回到座位（I18、I19，见 seat.ts） ----------
+  const roomRef = useRef<LobbyRoomSnapshot | null>(null);
+  roomRef.current = room;
+  const [rejoining, setRejoining] = useState(false);
+  const rejoinTimer = useRef<number | undefined>(undefined);
+  // 坐着的玩家（不是观战）进了房间就记住昵称和房间码
+  useEffect(() => {
+    const me = room?.members.find((member) => member.id === socket.id);
+    if (room && me && room.code) rememberSeat({ name: me.name, code: room.code });
+  }, [room]);
+  function rejoinSeat(tries = 0) {
+    window.clearTimeout(rejoinTimer.current);
+    const seat = readSeat();
+    if (!seat || !socket.connected) {
+      setRejoining(false);
+      return;
+    }
+    setRejoining(true);
+    socket.emit("room:join", { name: seat.name, code: seat.code }, (response) => {
+      if (response.ok) {
+        setRejoining(false);
+        setRoom(response.data);
+        setError("");
+        setNotice(response.data.status === "playing" ? "已回到对局。" : "已回到房间。");
+        return;
+      }
+      if (retryable(response.error) && tries < 45) {
+        rejoinTimer.current = window.setTimeout(() => rejoinSeat(tries + 1), 2000);
+        return;
+      }
+      setRejoining(false);
+      forgetSeat();
+      setRoom(null);
+      setNotice("");
+      setError(`没能回到刚才的房间：${response.error}`);
+    });
+  }
+
   useEffect(() => {
     const handleConnect = () => {
       setConnected(true);
       socket.emit("lobby:get", (response) => {
         if (response.ok) setLobbyRooms(response.data);
       });
+      // 刚打开（刷新）页面、或者断线重连：之前坐在某个房间里，就自动回去
+      const current = roomRef.current;
+      if (readSeat() && (!current || !current.members.some((member) => member.id === socket.id))) rejoinSeat();
     };
     const handleDisconnect = () => setConnected(false);
     const handleRoomUpdate = (snapshot: LobbyRoomSnapshot) => setRoom(snapshot);
     const handleRoomError = (message: string) => setError(message);
     const handleLobbyUpdate = (rooms: PublicRoomSummary[]) => setLobbyRooms(rooms);
     const handleRoomClosed = ({ reason }: { reason: string }) => {
+      forgetSeat();
       setRoom(null);
       setBusy(false);
       setError("");
@@ -107,6 +150,7 @@ function App() {
       socket.off("room:error", handleRoomError);
       socket.off("lobby:updated", handleLobbyUpdate);
       socket.off("room:closed", handleRoomClosed);
+      window.clearTimeout(rejoinTimer.current);
       socket.disconnect();
     };
   }, []);
@@ -145,6 +189,7 @@ function App() {
     setNotice("");
     setBusy(true);
     const nickname = name.trim();
+    rememberName(nickname);
 
     const complete = (response: { ok: true; data: LobbyRoomSnapshot } | { ok: false; error: string }) => {
       setBusy(false);
@@ -187,6 +232,7 @@ function App() {
         setError(response.error);
         return;
       }
+      forgetSeat();
       setRoom(null);
       setError("");
       setNotice("已离开房间。");
@@ -246,6 +292,13 @@ function App() {
     );
   }
 
+  const reconnectBanner = (rejoining || (room && !connected)) ? (
+    <div className="ll-reconnect" role="status" aria-live="polite">
+      <span className="spinner" />
+      {!connected ? "连接断开了，正在重连…" : "正在回到你的座位…"}
+    </div>
+  ) : null;
+
   if (room?.status === "playing" && room.game) {
     const players = room.game.players;
     const watched = players.some((player) => player.id === watchId) ? watchId : players[0]!.id;
@@ -270,6 +323,7 @@ function App() {
           onLeave={leaveRoom}
         />
         {confirmDialog}
+        {reconnectBanner}
       </main>
     );
   }
@@ -290,13 +344,15 @@ function App() {
         onKick={kickMember}
         onAddBot={addBot}
         onDissolve={dissolveRoom}
-        dialog={confirmDialog}
+        dialog={<>{confirmDialog}{reconnectBanner}</>}
         onTutorial={() => setTutorialOpen(true)}
       />
     );
   }
 
   return (
+    <>
+    {reconnectBanner}
     <HomeScreen
       theme={theme}
       themeToggle={themeToggle}
@@ -318,6 +374,7 @@ function App() {
       onJoinListed={joinListed}
       onTutorial={() => setTutorialOpen(true)}
     />
+    </>
   );
 }
 
