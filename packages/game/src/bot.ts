@@ -53,6 +53,10 @@ export const BOT_PARAMS = {
   /** 大臣放回牌堆底：大牌放到自己会抽到的位置、别给对手（乘点数；中途常被王子、大臣打乱，所以给得小）。 */
   orderMine: 0.12,
   orderOther: 0.08,
+  /** 大臣留牌：留着公主没有说得出口的危险时（见 princessDanger）一律留公主。 */
+  princessKeepBonus: 100,
+  /** 放底顺序只在留同一张时比较，不影响留哪张。 */
+  orderTieBreakOnly: true,
 };
 
 export type BotParams = typeof BOT_PARAMS;
@@ -91,7 +95,17 @@ interface Ctx {
 
 const V = (role: Role) => ROLE_VALUE[role];
 const N = (role: Role) => ROLE_NAME[role];
-const pct = (p: number) => `${Math.round(p * 100)}%`;
+/** 把概率说成玩家听得懂的话（理由里不出现小数和百分比）。 */
+function odds(p: number): string {
+  if (p >= 0.95) return "几乎一定";
+  if (p >= 0.75) return "十有八九";
+  if (p >= 0.6) return "多半";
+  if (p >= 0.45) return "有一半机会";
+  if (p >= 0.28) return "大约三次有一次";
+  if (p >= 0.18) return "大约四五次有一次";
+  if (p >= 0.08) return "大约十次有一次";
+  return "只有很小的机会";
+}
 
 function nameOf(ctx: Ctx, id: string): string {
   return ctx.view.players.find((player) => player.id === id)?.name ?? id;
@@ -381,7 +395,7 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       gain = p * elimValue(ctx, opp);
       if (lastOpponent) pEnd = p;
       if (p >= 0.999) reason = `${howKnown(ctx, opp.id)}，${who}手里是${N(guess)}：卫兵点他、猜${N(guess)}，一定中。`;
-      else reason = `猜${who}是${N(guess)}：${N(guess)}还有 ${ctx.unseen[guess]} 张没露面，猜中的机会约 ${pct(p)}。`;
+      else reason = `猜${who}是${N(guess)}：${N(guess)}还有 ${ctx.unseen[guess]} 张没露面（${odds(p)}能猜中）。`;
       break;
     }
     case "priest": {
@@ -423,7 +437,8 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       if (tie > 0) keep = (1 - tie) * keep + tie * keepNet(ctx, kept, new Set([...knowers, opp.id]));
       if (win >= 0.999) reason = `${howKnown(ctx, opp.id)}${who}的牌比你的${keptText}小，男爵比牌必赢。`;
       else if (lose >= 0.999) reason = `${who}的牌比你大，可也没有更好的打法了。`;
-      else reason = `你留着${keptText}，和${who}比牌赢的机会约 ${pct(win)}，输的机会约 ${pct(lose)}。`;
+      else if (win >= 0.6) reason = `你留着${keptText}，没露面的牌大多比它小，和${who}比牌${odds(win)}能赢。`;
+      else reason = `你留着${keptText}，和${who}比牌${odds(win)}能赢。`;
       break;
     }
     case "handmaid": {
@@ -461,8 +476,10 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       gain += (1 - princess) * ctx.t * P.princeStrength * (theirs - fresh) * lead(ctx, opp);
       if (!opp.spy) gain -= d.spy * P.spyGive;
       if (princess >= 0.999) reason = `${howKnown(ctx, opp.id)}，${who}拿着公主：王子逼他弃掉，他就出局。`;
-      else if (princess >= 0.25) reason = `${who}很可能拿着公主（约 ${pct(princess)}），用王子逼他弃牌。`;
-      else reason = `用王子逼${who}弃牌重抽（他手里的牌估计 ${theirs.toFixed(1)} 点）。`;
+      else if (princess >= 0.5) reason = `${who}很可能拿着公主，用王子逼他弃牌，弃掉公主就出局。`;
+      else if (princess >= 0.2) reason = `${who}有可能拿着公主，用王子逼他弃牌，弃掉公主就出局。`;
+      else if (theirs - fresh >= 1) reason = `${who}手里多半是大牌，用王子逼他弃掉重抽。`;
+      else reason = `用王子逼${who}弃牌重抽，留下${N(kept)}。`;
       break;
     }
     case "chancellor":
@@ -487,7 +504,9 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
         ? `不能打公主，只能打国王，把公主换给${who}。`
         : known
         ? `${howKnown(ctx, opp.id)}，${who}拿着${N(known)}，用国王换过来。`
-        : `你只剩${keptText}，和${who}换牌（他的牌估计 ${expectedValue(d).toFixed(1)} 点）。`;
+        : expectedValue(d) > V(kept) + 1
+          ? `你只剩${keptText}，${who}的牌多半比它大，用国王换过来。`
+          : `用国王和${who}换牌，换完你们俩都知道对方拿着什么。`;
       break;
     }
     case "countess":
@@ -514,7 +533,7 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
       const spyNow = card === "spy" && !ctx.me.spy && !ctx.opps.some((player) => player.spy);
       reason = spyNow
         ? `最后一回合打出间谍：只有你打过间谍，多拿 1 枚；留下${keptText}去比牌。`
-        : `牌堆抽完了，留下${keptText}去比牌，赢的机会约 ${pct(Math.min(1, equity))}。`;
+        : `牌堆抽完了，留下${keptText}去比牌（${odds(Math.min(1, equity))}能赢）。`;
     }
   }
   return { command, score, reason };
@@ -523,10 +542,31 @@ function scorePlay(ctx: Ctx, command: PlayCommand): Candidate {
 // ---------------------------------------------------------------------------
 // 大臣留牌
 
+/**
+ * 留着公主有没有说得出口的危险：有人确切知道我拿着公主（大臣前就被看穿了），
+ * 或者下一轮会轮到的对手确定拿着王子。没有的话大臣一律留公主（放掉公主新手看不懂，自对弈也没有更强）。
+ */
+function princessDanger(ctx: Ctx, deckCount: number): string | null {
+  const acting = ctx.opps.slice(0, Math.min(deckCount, ctx.opps.length));
+  for (const [knower, role] of ctx.know.exposure) {
+    if (role === "princess" && ctx.opps.some((opp) => opp.id === knower)) return `${nameOf(ctx, knower)}知道你拿着公主，留着很容易被他点名`;
+  }
+  for (const opp of acting) {
+    if (ctx.know.info.get(opp.id)?.known === "prince") return `${howKnown(ctx, opp.id)}，${nameOf(ctx, opp.id)}手里有王子，留着公主会被他逼着弃掉出局`;
+  }
+  return null;
+}
+
 function scoreChancellor(view: GameState, meId: string, params: BotParams, command: ChancellorCommand): Candidate {
   const after = view.deckCount + command.bottom.length;
   const ctx = makeCtx(view, meId, params, after);
-  const keep = keepNet(ctx, command.keep, new Set(), after);
+  const hasPrincess = command.keep === "princess" || command.bottom.includes("princess");
+  const danger = hasPrincess ? princessDanger(ctx, after) : null;
+  // 被看穿的公主：留着时知道的人照样会盯着它
+  const knowers = new Set<string>();
+  if (command.keep === "princess") for (const [knower, role] of ctx.know.exposure) if (role === "princess") knowers.add(knower);
+  let keep = keepNet(ctx, command.keep, knowers, after);
+  if (command.keep === "princess" && !danger) keep += params.princessKeepBonus;
   // 放回去的牌谁会抽到：抽牌节奏不被打乱时，从顶数第 i 张（0 起）由我之后第 (i mod 在局人数)+1 个人抽到
   let order = 0;
   command.bottom.forEach((card, offset) => {
@@ -541,7 +581,11 @@ function scoreChancellor(view: GameState, meId: string, params: BotParams, comma
     command.bottom.length === 2
       ? `${N(command.bottom[0]!)}、${N(command.bottom[1]!)}放回牌堆底（${N(command.bottom[1]!)}在最底下）`
       : `${N(command.bottom[0]!)}放回牌堆底`;
-  return { command, score: keep + order, reason: `留下${N(command.keep)}(${V(command.keep)})，${bottomText}。` };
+  const reason =
+    danger && command.bottom.includes("princess")
+      ? `${danger}；先把公主放回牌堆底（放回去不算弃牌，不会出局），留下${N(command.keep)}(${V(command.keep)})。`
+      : `留下${N(command.keep)}(${V(command.keep)})，${bottomText}。`;
+  return { command, score: keep + (params.orderTieBreakOnly ? 0.01 * order : order), reason };
 }
 
 // ---------------------------------------------------------------------------

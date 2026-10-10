@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { FULL_DECK, ROLES, type Role } from "../src/cards.js";
 import { botCommand, botDecision, botHint } from "../src/bot.js";
-import { buildKnowledge } from "../src/bot-knowledge.js";
+import { buildKnowledge, handDistribution } from "../src/bot-knowledge.js";
 import { applyCommand, createGame, legalActions, redactGameForViewer, timeoutTurn, unseenCounts } from "../src/engine.js";
 import { createRng } from "../src/rng.js";
 import { createScene, scenePlayers } from "../src/scenes.js";
@@ -400,5 +400,61 @@ describe("最后一回合不自杀", () => {
       const s = createScene({ players, hands: [["princess", "king"]], deck: [], leftovers: "discards", setAside: "baron" });
       always(s, "p1", (c) => c.type === "PLAY" && c.card === "king", 10);
     }
+  });
+});
+
+describe("首发验收返工", () => {
+  it("I29：理由里不出现小数和百分比；只有过半的把握才说「很可能」", () => {
+    for (const players of [2, 3, 4, 6]) {
+      for (let seed = 1; seed <= 25; seed += 1) {
+        const rng = createRng(seed * 7 + players);
+        let s = createGame(scenePlayers(players), seed * 13 + players);
+        let steps = 0;
+        while (s.phase !== "finished" && steps++ < 3000) {
+          if (s.phase === "roundEnd") {
+            s = timeoutTurn(s);
+            continue;
+          }
+          const actor = s.players[s.current]!.id;
+          const v = view(s, actor);
+          const { command, reason } = botHint(v, actor, () => rng.next())!;
+          expect(reason, reason).not.toMatch(/%|\d\.\d/);
+          if (reason.includes("很可能") && command.type === "PLAY" && command.target) {
+            expect(handDistribution(buildKnowledge(v, actor), command.target).princess, reason).toBeGreaterThanOrEqual(0.5);
+          }
+          s = applyCommand(s, actor, command);
+        }
+      }
+    }
+  });
+
+  it("I30：大臣留牌时，没有人知道你拿着公主、也没有已知拿王子的对手，就留公主", () => {
+    for (const players of [2, 3, 4, 6]) {
+      for (const others of [["king", "baron"], ["countess", "guard"], ["chancellor", "prince"], ["handmaid", "spy"]] as Role[][]) {
+        for (const deck of [[], ["guard", "priest", "baron", "handmaid", "spy", "guard", "guard"]] as Role[][]) {
+          const s = createScene({ players, hands: [["princess", ...others]], stage: "chancellor", deck, leftovers: "discards" });
+          always(s, "p1", (c) => c.type === "CHANCELLOR" && c.keep === "princess", 8);
+        }
+      }
+    }
+  });
+
+  it("I30：被人看穿拿着公主时可以把公主放回牌堆底，理由说清楚为什么", () => {
+    let s = dealt("countess", ["spy", "priest", "guard"], ["princess", "guard", "handmaid", "chancellor", "king", "baron"]);
+    s = play(s, "p1", "spy"); // 一号留公主
+    s = play(s, "p2", "priest", "p1"); // 二号看到公主，留卫兵
+    s = play(s, "p3", "handmaid");
+    s = play(s, "p1", "chancellor"); // 一号抽到国王、男爵
+    expect(s.stage).toBe("chancellor");
+    let returned = 0;
+    for (let seed = 1; seed <= 10; seed += 1) {
+      const { command, reason } = decide(s, "p1", seed);
+      if (command.type === "CHANCELLOR" && command.keep !== "princess") {
+        returned += 1;
+        expect(reason).toContain("知道你拿着公主");
+        expect(reason).toContain("不会出局");
+      }
+    }
+    expect(returned).toBeGreaterThan(0);
   });
 });
