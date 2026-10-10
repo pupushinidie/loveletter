@@ -12,7 +12,7 @@ import {
   isRole,
   type Role,
 } from "./cards.js";
-import { createRng, type Rng } from "./rng.js";
+import { createRng, randomSeed, restoreRng, type Rng, type Seed } from "./rng.js";
 import type {
   Config,
   EliminationReason,
@@ -501,17 +501,30 @@ export function apply(state: GameState, playerId: string, command: GameCommand, 
   return { state: next, events: ctx.events };
 }
 
-function runCommand(state: GameState, playerId: string, command: GameCommand): { state: GameState; events: GameEvent[] } {
-  const rng = createRng(state.rngState ?? state.seed ?? 0);
-  const result = apply(state, playerId, command, rng);
-  result.state.rngState = rng.state;
-  result.state.actions = [...(state.actions ?? []), { player: playerId, command }];
+/** 不传 rng 时从 state.rngState 接着取（测试、教程、预览这些可复现的场合）。 */
+function stateRng(state: GameState): Rng {
+  return state.rngState ? restoreRng(state.rngState) : createRng(state.seed ?? 0);
+}
+
+function runCommand(state: GameState, playerId: string, command: GameCommand, rng?: Rng): { state: GameState; events: GameEvent[] } {
+  const source = rng ?? stateRng(state);
+  const before = source.draws;
+  const result = apply(state, playerId, command, source);
+  result.state.rngState = source.state;
+  const entry: NonNullable<GameState["actions"]>[number] = { player: playerId, command };
+  if (rng && source.draws > before) entry.seed = rng.seed;
+  result.state.actions = [...(state.actions ?? []), entry];
   return result;
 }
 
-/** 服务器用：执行命令，随机数状态从 state.rngState 接着用，并把命令记进动作序列。 */
-export function applyCommand(state: GameState, playerId: string, command: GameCommand): GameState {
-  return runCommand(state, playerId, command).state;
+/**
+ * 执行命令，并把命令记进动作序列。
+ * - **服务器每次都传一个新的 rng**（用 crypto 种子造的，`createRng(crypto 随机 128 位)`）：
+ *   这样每开一小局、每次并列抽先手都用新注入的随机数，玩家没法从已经看到的牌反推后面的牌（首发验收 I8）。
+ * - 不传时从 `state.rngState` 接着取，同一种子、同一串操作结果一样（测试、教程、预览用）。
+ */
+export function applyCommand(state: GameState, playerId: string, command: GameCommand, rng?: Rng): GameState {
+  return runCommand(state, playerId, command, rng).state;
 }
 
 // ---------------------------------------------------------------------------
@@ -609,19 +622,20 @@ export type TurnChooser = (view: GameState, playerId: string) => GameCommand | n
  *   出牌（含选人、猜牌），打出大臣还要留牌。整个回合前面加一条 TurnTimedOut，服务器只记 1 次超时。
  *   choose 只拿到当前玩家的裁剪视角；它给的命令不合法时退回固定动作。
  * - 结算画面：直接开下一小局（不算谁超时）。
+ * rng 同 applyCommand：服务器每次传一个新的 crypto 随机数，不传就从 state.rngState 接着取。
  */
-export function timeoutTurn(state: GameState, choose: TurnChooser = timeoutCommand): GameState {
+export function timeoutTurn(state: GameState, choose: TurnChooser = timeoutCommand, rng?: Rng): GameState {
   if (state.phase === "finished") return state;
   if (state.phase === "roundEnd") {
     const next = structuredClone(state);
-    const rng = createRng(next.rngState ?? next.seed ?? 0);
-    const ctx: Ctx = { state: next, rng, events: [] };
+    const source = rng ?? stateRng(state);
+    const ctx: Ctx = { state: next, rng: source, events: [] };
     next.ready = next.players.map((player) => player.id);
     beginNextRound(ctx);
     next.version += 1;
     next.events = ctx.events;
-    next.rngState = rng.state;
-    next.actions = [...(state.actions ?? []), { player: "", command: { type: "TIMEOUT" } }];
+    next.rngState = source.state;
+    next.actions = [...(state.actions ?? []), { player: "", command: { type: "TIMEOUT" }, ...(rng ? { seed: rng.seed } : {}) }];
     return next;
   }
   const actor = state.players[state.current]!;
@@ -637,9 +651,9 @@ export function timeoutTurn(state: GameState, choose: TurnChooser = timeoutComma
     try {
       const command = choose(view, actor.id);
       if (!command) throw new Error("没有给出命令");
-      result = runCommand(current, actor.id, command);
+      result = runCommand(current, actor.id, command, rng);
     } catch {
-      result = runCommand(current, actor.id, timeoutCommand(view, actor.id)!);
+      result = runCommand(current, actor.id, timeoutCommand(view, actor.id)!, rng);
     }
     events.push(...result.events);
     current = result.state;
@@ -732,9 +746,13 @@ export function redactGameForViewer(state: GameState, viewerId: string, options:
 // ---------------------------------------------------------------------------
 // 开局
 
+/**
+ * 开一场。seed 是 128 位种子（4 个 32 位整数，服务器用 crypto 生成）；不传就用 crypto 随机生成。
+ * 测试、教程、预览可以传一个数字（会展开成 128 位），同一个数字发的牌一样。
+ */
 export function createGame(
   players: readonly NewPlayer[],
-  seed = Math.floor(Math.random() * 2 ** 32),
+  seed: Seed = randomSeed(),
   options: CreateOptions = {},
 ): GameState {
   const config = defaultConfig(players.length, options.config);
@@ -770,7 +788,7 @@ export function createGame(
     version: 0,
     deck: [],
     setAside: null,
-    seed,
+    seed: rng.seed,
     actions: [],
   };
   const starter = options.starter ?? rng.int(players.length);

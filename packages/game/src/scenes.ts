@@ -70,6 +70,27 @@ export interface SceneSpec {
   readonly config?: Partial<Config>;
 }
 
+/**
+ * 补牌用的洗牌（只给预览局面用，和线上洗牌无关）：沿用最早的 mulberry32，
+ * 这样换了线上随机数发生器（I8）以后，同一个 spec 造出来的局面一张牌都不变，界面、人机、教程的测试和截图不受影响。
+ */
+function fixtureShuffle<T>(items: readonly T[], seed: number): T[] {
+  let state = seed >>> 0;
+  const next = () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(next() * (i + 1));
+    [copy[i], copy[j]] = [copy[j]!, copy[i]!];
+  }
+  return copy;
+}
+
 function normalizePlayers(players: SceneSpec["players"]): NewPlayer[] {
   if (players === undefined) return scenePlayers(3);
   if (typeof players === "number") return scenePlayers(players);
@@ -119,7 +140,7 @@ export function createScene(spec: SceneSpec = {}): GameState {
   }
   const remaining = [...FULL_DECK];
   for (const card of used) remaining.splice(remaining.indexOf(card), 1);
-  const pool = rng.shuffle(remaining);
+  const pool = fixtureShuffle(remaining, seed);
   const take = (prefer?: (role: Role) => boolean): Role => {
     if (pool.length === 0) throw new Error("21 张牌不够分了。");
     const index = prefer ? Math.max(0, pool.findIndex(prefer)) : 0;
@@ -232,7 +253,7 @@ export function createScene(spec: SceneSpec = {}): GameState {
     version: 1,
     deck,
     setAside,
-    seed,
+    seed: rng.seed,
     rngState: rng.state,
     actions: [],
   };

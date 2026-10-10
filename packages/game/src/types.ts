@@ -187,9 +187,15 @@ export interface GameState {
   deck?: Role[];
   /** 开局面朝下移出的那张；被王子抽走后是 null。 */
   setAside?: Role | null;
-  /** 种子和随机数状态（洗牌、第一局先手、并列赢家里抽先手）。 */
-  seed?: number;
-  rngState?: number;
-  /** 动作序列：同一种子重放这串动作就能复现整场。 */
-  actions?: { player: string; command: GameCommand | { type: "TIMEOUT" } }[];
+  /**
+   * 开局的种子和随机数状态（各 4 个 32 位整数，128 位；洗牌、第一局先手、并列赢家里抽先手）。
+   * 线上服务器每个命令都另外传一个新的 crypto 随机数进来，不接着用 rngState（见 rng.ts）。
+   */
+  seed?: number[];
+  rngState?: number[];
+  /**
+   * 动作序列：用开局种子重放这串动作就能复现整场。服务器传进来的随机数被用到时（小局结束抽先手、开新一局洗牌），
+   * 那一步记下它的种子 seed（createRng(seed) 能重放）。
+   */
+  actions?: { player: string; command: GameCommand | { type: "TIMEOUT" }; seed?: number[] }[];
 }

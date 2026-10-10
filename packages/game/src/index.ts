@@ -37,8 +37,8 @@ export {
 export type { PreviewRoomOptions, SceneName, SceneOptions, SceneSpec, ScriptStep } from "./scenes.js";
 export { BOT_PARAMS, botCommand, botDecision, botHint } from "./bot.js";
 export type { BotDecision, BotParams } from "./bot.js";
-export { createRng } from "./rng.js";
-export type { Rng } from "./rng.js";
+export { createRng, randomSeed, restoreRng } from "./rng.js";
+export type { Rng, Seed } from "./rng.js";
 export { CAPACITY_OPTIONS, DEFAULT_ROOM_ACCESS } from "./roomTypes.js";
 export type {
   AckResponse,
