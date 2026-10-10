@@ -25,7 +25,24 @@ export function hintFor(game: GameState, playerId: string): Hint {
   // 理由要稳定（同一个局面问两次说法一样），随机数固定成 0
   const decision = botHint(game, playerId, () => 0);
   if (!decision) return { say: "现在没有能做的。", anchor: null };
-  return { say: describe(game, playerId, decision.command), note: decision.reason, anchor: anchorOf(game, me.hand, decision.command) };
+  return { say: describe(game, playerId, decision.command), note: spyWording(decision.reason), anchor: anchorOf(game, me.hand, decision.command) };
+}
+
+/**
+ * 人机理由里讲间谍 +1 的说法，统一成教程的口径（I36）：这一小局结束时没出局就行、不用赢，打过或被弃过都算。
+ * 人机的原话（packages/game/src/bot.ts）改了以后这里对不上就原样显示，hints.test.ts 会报出来。
+ */
+const SPY_WORDING: readonly (readonly [string, string])[] = [
+  ["活到最后、又只有你打过间谍，能多拿 1 枚", "这一小局结束时你没出局、在局的人里又只有你打过或被弃过间谍，就多拿 1 枚，不用赢"],
+  ["只有你打过间谍，多拿 1 枚", "你没出局、在局的人里只有你打过或被弃过间谍，就多拿 1 枚，不用赢"],
+  ["弃掉间谍（也算打过间谍）", "弃掉间谍（被弃过也算，这一小局结束时没出局就能拿间谍 +1）"],
+  ["已经有人打过间谍", "已经有在局的人打过或被弃过间谍"],
+];
+
+export function spyWording(reason: string): string {
+  let text = reason;
+  for (const [from, to] of SPY_WORDING) text = text.replace(from, to);
+  return text;
 }
 
 function describe(game: GameState, me: string, command: GameCommand): string {

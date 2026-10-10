@@ -208,7 +208,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   // ---- 第一段：一整局 ----
   {
     kind: "info", id: "welcome", lesson: "目标", face: "happy",
-    say: "情书：撑到最后，或者牌堆抽完时手里点数最大，就赢这一小局。",
+    say: "情书：别人都出局只剩你，或者牌堆抽完时手里点数最大，就赢这一小局。",
     note: "赢一小局拿 1 枚钟情标记，先攒够的人赢整场；这局我们 3 个人玩，你先手。",
   },
   {
@@ -259,7 +259,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "spy", lesson: "间谍", anchor: `marks-${RIVAL_2}`, face: "think",
     say: "咕噜二号打出间谍：本身没效果，名字旁多了个面具。",
-    note: "一小局结束时，只要你没出局、而且还在局的人里只有你打过或被弃过间谍，就 +1；不用赢，被王子弃掉也算。",
+    note: "这一小局结束时，你没出局、而且在局的人里只有你打过或被弃过间谍，就 +1 枚，不用赢；被王子点到弃掉也算。",
   },
   {
     kind: "info", id: "try-prince", lesson: "女伯爵", anchor: "card:prince",
@@ -308,7 +308,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "out", lesson: "出局", anchor: `seat-${RIVAL_2}`, face: "happy",
     say: "猜中了，咕噜二号出局！",
-    note: "出局的人亮出手牌，这一小局不再轮到他、别人也不能选他；他打过的间谍也不再算数。",
+    note: "出局的人亮出手牌，这一小局不再轮到他、别人也不能选他；他打过或被弃过的间谍也不再算数。",
   },
   {
     kind: "watch", id: "w-prince", anchor: `seat-${RIVAL_1}`,
@@ -351,7 +351,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "spy2", anchor: `marks-${RIVAL_1}`, face: "think",
     say: "一号也打了间谍。",
-    note: "二号已经出局不算了，现在在局的人里只有一号打过间谍：一小局结束时他只要没出局，就 +1。",
+    note: "二号出局不算了，现在在局的人里只有一号打过或被弃过间谍：这一小局结束时他只要没出局，就 +1 枚，不用赢。",
   },
   {
     kind: "info", id: "try-princess", lesson: "男爵和公主", anchor: "card:princess",
@@ -380,7 +380,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "win", lesson: "一局结束", anchor: "round-tokens", face: "happy",
     say: "公主(9) 比卫兵(1) 大，一号出局，你赢了！",
-    note: "只剩一个人时他立刻赢这一小局，+1 枚；打过间谍的两人都出局了，没人拿间谍 +1。",
+    note: "只剩一个人时他立刻赢这一小局，+1 枚；打过间谍的两人都出局了，在局的你没打过也没被弃过，所以没人拿间谍 +1。",
   },
   {
     kind: "do", id: "next-round", expect: { type: "READY" }, anchor: "next-round-button",
@@ -408,7 +408,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "spy-bonus", anchor: "round-tokens", face: "happy",
     say: "你还多拿 1 枚：间谍 +1。",
-    note: "你这局早先打过间谍，二号也打过但出局了不算；间谍 +1 不用赢也能拿，这次正好和赢的 1 枚叠加。",
+    note: "这一小局结束时你没出局，在局的人里只有你打过或被弃过间谍（二号打过但出局了不算），就 +1 枚；不用赢也能拿，这次正好和赢的 1 枚叠加。",
   },
   {
     kind: "info", id: "starter", lesson: "下一局谁先手", anchor: "next-starter",
