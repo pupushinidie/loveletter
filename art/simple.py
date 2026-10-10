@@ -5,6 +5,7 @@
     ~/miniconda3/envs/quant/bin/python art/simple.py cards icons  # 只画某几个目录
     ~/miniconda3/envs/quant/bin/python art/simple.py --force    # 连正式图一起重画成简洁版（慎用）
     ~/miniconda3/envs/quant/bin/python art/simple.py --check    # 核对 spec 和文件一一对应、尺寸对，列出还是简洁版的文件
+    ~/miniconda3/envs/quant/bin/python art/simple.py --check --final    # 同样核对正式美术定稿 art/out/final
 
 风格照 art/spec.md 的烛光夜宴：调色板同 cardframe.P，光从左上来（亮边在左上、暗边在右下），1px 深色描边 #1c0609。
 - 牌面：正式牌框（cardframe.face）+ 角色色底 + 大号点数 + 代码画的角色符号 + 角色名（Fusion Pixel 12px）。
@@ -1455,6 +1456,9 @@ def check() -> int:
 
 if __name__ == "__main__":
     args = sys.argv[1:]
+    if "--final" in args:  # 核对正式美术定稿目录 art/out/final（开发 agent 换图的来源）而不是 public/art
+        PUBLIC = Path(__file__).resolve().parent / "out" / "final"
+        args.remove("--final")
     if "--check" in args:
         sys.exit(check())
     build("--force" in args, [a for a in args if not a.startswith("--")] or None)

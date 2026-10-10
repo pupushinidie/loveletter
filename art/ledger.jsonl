@@ -82,3 +82,18 @@
 {"time": "2026-10-09 23:49:07", "name": "cover-5b", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006662139336268107}, "seconds": 27.8}
 {"time": "2026-10-09 23:49:29", "name": "cover-6", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006524975220362345}, "seconds": 21.9}
 {"time": "2026-10-09 23:49:53", "name": "cover-6b", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006439799441231622}, "seconds": 24.2}
+{"time": "2026-10-10 08:15:13", "name": "snuff-s0", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 93.5, "status": "completed"}
+{"time": "2026-10-10 08:15:13", "name": "snuff-s1", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 94.0, "status": "completed"}
+{"time": "2026-10-10 08:15:17", "name": "candle-s0", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 98.2, "status": "completed"}
+{"time": "2026-10-10 08:15:34", "name": "snuff-s2", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 114.4, "status": "completed"}
+{"time": "2026-10-10 08:15:35", "name": "candle-s1", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 115.9, "status": "completed"}
+{"time": "2026-10-10 08:15:55", "name": "candle-s2", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 136.1, "status": "completed"}
+{"time": "2026-10-10 08:16:30", "name": "shield-s1", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 76.5, "status": "completed"}
+{"time": "2026-10-10 08:16:41", "name": "shield-s0", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 88.2, "status": "completed"}
+{"time": "2026-10-10 08:17:22", "name": "duel-s0", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 108.6, "status": "completed"}
+{"time": "2026-10-10 08:17:31", "name": "duel-s2", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 95.6, "status": "completed"}
+{"time": "2026-10-10 08:18:06", "name": "favor-s1", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 85.0, "status": "completed"}
+{"time": "2026-10-10 08:18:13", "name": "duel-s1", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 157.5, "status": "completed"}
+{"time": "2026-10-10 08:19:32", "name": "favor-s0", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 182.5, "status": "completed"}
+{"time": "2026-10-10 08:19:32", "name": "favor-s2", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 130.2, "status": "completed"}
+{"time": "2026-10-10 08:20:19", "name": "shield-s2", "endpoint": "/animate-with-text-v3", "usage": {"type": "generations", "generations": 1.0}, "seconds": 302.0, "status": "completed"}

@@ -27,6 +27,7 @@ ART = Path(__file__).resolve().parent
 OUT = ART / "out" / "gallery"
 DECISION = Path.home() / "projects" / "pipeline" / "games" / "loveletter" / "assets" / "gallery-decision.json"
 NIGHT, DAY = (70, 18, 26, 255), (239, 227, 200, 255)
+ANIM = {"candle": (16, 6, True), "snuff": (16, 8, False), "shield": (32, 8, False), "duel": (32, 6, False), "favor": (32, 8, False)}  # 单帧宽、帧数、是否循环
 
 
 def split_bg(img: Image.Image, scale: int) -> Image.Image:
@@ -64,8 +65,17 @@ def preview(item: dict, opt: dict, key: str) -> Path:
     elif kind == "deco":
         im = Image.open(src)
         img = split_bg(im, 3 if im.width <= 64 else 2)
-    elif kind == "anim":
-        return src  # GIF 直接用
+    elif kind == "anim":  # 横排精灵图 → 左深底右白天底的 GIF（播一次的末尾停一会儿）
+        w, n, loop = ANIM[item["anim"]]
+        strip = Image.open(src).convert("RGBA")
+        frames = [split_bg(strip.crop((i * w, 0, (i + 1) * w, strip.height)), 6 if w <= 16 else 4).convert("RGB")
+                  for i in range(n)]
+        ms = {"candle": 120, "snuff": 100, "shield": 80, "duel": 80, "favor": 90}[item["anim"]]
+        durations = [ms] * n if loop else [ms] * (n - 1) + [900]
+        OUT.mkdir(parents=True, exist_ok=True)
+        path = OUT / f"{key}-{opt['value']}.gif"
+        frames[0].save(path, save_all=True, append_images=frames[1:], duration=durations, loop=0, disposal=1)
+        return path
     else:  # scene / cover：原图 2 倍（封面 1 倍）
         im = Image.open(src).convert("RGBA")
         s = 2 if kind == "scene" else 1
@@ -97,9 +107,9 @@ def main() -> None:
         "title": "情书：正式美术画廊",
         "stage": "art",
         "blocking": False,
-        "intro": ("正式美术的候选，每样一题，标「推荐」的是美术评审签字的那张，不选就按推荐上线。"
+        "intro": ("情书正式美术的候选，每样一题。标「推荐」的是美术自查后挑定、已经导出到 art/out/final 的那张，不选就按推荐上线。"
                   "想换哪张随时来换；都不满意可以选「其他」写备注，美术重画。\n\n"
-                  "牌面预览：左边 3 倍（手牌大小附近），右边是 1 倍整张牌和小牌（打出区大小）。图标左半深底、右半白天底。"),
+                  "牌面预览：左边 3 倍（手牌大小附近），右边是 1 倍整张牌和小牌（打出区大小）。图标、动画左半深底、右半白天底。"),
         "questions": questions,
     }
     DECISION.parent.mkdir(parents=True, exist_ok=True)

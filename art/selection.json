@@ -1,5 +1,5 @@
 {
- "_note": "正式美术选了哪张。路径相对 art/。评审第 1 轮推荐的已定；带 _pending 的是美术首选、等评审第 2 轮签字（王子、favor-big、图标、印章、装饰、动画首帧、封面）。",
+ "_note": "正式美术选了哪张（2026-10-10 定稿，美术 agent 自查自选，不再有评审第 2 轮）。路径相对 art/。导出：python art/export.py → art/out/final/。",
  "portraits": {
   "spy": {
    "file": "out/r1/portraits/spy-s1.png",
@@ -43,7 +43,7 @@
   },
   "prince": {
    "file": "out/r1/portraits/prince-s8-crown-5302.png",
-   "_pending": "王子加冠（edit-image），美术首选，待评审第 2 轮"
+   "why": "评审 1 要求加冠；edit-image 加冠 5302：红宝石金冠小牌 1× 也认得出，深蓝上衣和红披风、红帷幕分得开"
   },
   "chancellor": {
    "file": "out/r1/portraits/chancellor-s1.png"
@@ -95,65 +95,103 @@
    "file": "out/r1/icons/favor/favor-8.png"
   },
   "favor-big": {
-   "file": "out/r1/icons/favor-big/favor-big-51.png",
-   "_pending": "美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/favor-big/favor-big-51.png"
   },
   "shield": {
-   "file": "out/r1/icons/shield/shield.png",
-   "_pending": "美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/shield/shield.png"
   },
   "spy": {
-   "file": "out/r1/icons/spy/spy-35.png",
-   "_pending": "美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/spy/spy-35.png"
   },
   "out": {
-   "file": "out/r1/icons/out/out-9.png",
-   "_pending": "美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/out/out-9.png"
   },
   "crown": {
-   "file": "out/r1/icons/crown/crown-3.png",
-   "_pending": "美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/crown/crown-3.png"
   },
   "letter": {
    "file": "out/r1/icons/letter/letter-8.png",
-   "outline": true,
-   "_pending": "美术首选，待评审第 2 轮"
+   "outline": true
   },
   "sealed": {
-   "file": "out/r1/icons/sealed/sealed-1.png",
-   "_pending": "美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/sealed/sealed-1.png"
   },
   "candle": {
-   "file": "out/r1/icons/candle/candle-8.png",
-   "_pending": "动画首帧，美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/candle/candle-8.png"
   },
   "shield-big": {
-   "file": "out/r1/icons/shield-big/shield-big.png",
-   "_pending": "动画首帧，美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/shield-big/shield-big.png"
   },
   "duel-big": {
-   "file": "out/r1/icons/duel-big/duel-big-5.png",
-   "_pending": "动画首帧，美术首选，待评审第 2 轮"
+   "file": "out/r1/icons/duel-big/duel-big-5.png"
   }
  },
  "seals": {
-  "base": "out/r1/icons/seal-sky/seal-sky-20.png",
-  "_pending": "火漆底 + 代码浮雕图案（art/seals.py），美术首选，待评审第 2 轮"
+  "base": "out/r1/icons/seal-sky/seal-sky-20.png"
  },
  "deco": {
   "banner": "out/r1/deco/banner-s72.png",
-  "letter-win": "out/r1/deco/letter-win-s82.png",
-  "_pending": "美术首选，待评审第 2 轮"
+  "letter-win": "out/r1/deco/letter-win-s82.png"
  },
  "covers": {
-  "recommended": "out/covers/cover-4.png",
+  "recommended": "out/covers/cover-4b.png",
   "candidates": [
-   "out/covers/cover-4.png",
    "out/covers/cover-4b.png",
+   "out/covers/cover-4.png",
    "out/covers/cover-1.png",
    "out/covers/cover-5.png",
    "out/covers/cover-6.png"
   ],
-  "_pending": "美术首选，待评审第 2 轮"
+  "why": "信、玫瑰、金冠、蜡烛四样都在，金线桌布一眼是宫廷，铺满画面；cover-4 的金冠插着羽毛笔（冠和墨水瓶混成一个东西），上半是空幕布"
+ },
+ "anim": {
+  "_note": "art/anim.py：PixelLab 候选在 out/anim/<名字>/s<seed>/，代码帮手（anim.py code）在 scode / s<seed>ring / s<seed>spark；pick 复制成 out/anim/<名字>/strip.png，export.py 导出 fx/<名字>.png",
+  "candle": {
+   "file": "out/anim/candle/scode/strip.png",
+   "candidates": [
+    "out/anim/candle/s0",
+    "out/anim/candle/s1",
+    "out/anim/candle/s2"
+   ],
+   "why": "PixelLab 3 个种子火苗都变成十字或蘑菇形；改成 candle-8 静态蜡烛 + 代码按它自己的颜色逐帧重画火苗"
+  },
+  "snuff": {
+   "file": "out/anim/snuff/scode/strip.png",
+   "candidates": [
+    "out/anim/snuff/s0",
+    "out/anim/snuff/s1",
+    "out/anim/snuff/s2"
+   ],
+   "why": "同上，PixelLab 的烟画成十字；代码：一晃、变小、灭、青烟上飘，停在干净的熄灭蜡烛"
+  },
+  "shield": {
+   "file": "out/anim/shield/s0ring/strip.png",
+   "candidates": [
+    "out/anim/shield/s0",
+    "out/anim/shield/s1",
+    "out/anim/shield/s2",
+    "out/anim/shield/s1ring",
+    "out/anim/shield/s2ring"
+   ],
+   "why": "s0 的光点最像魔法光点；代码补 spec 写的光圈从小到大"
+  },
+  "duel": {
+   "file": "out/anim/duel/s0/strip.png",
+   "candidates": [
+    "out/anim/duel/s1",
+    "out/anim/duel/s2"
+   ],
+   "why": "火花最完整，最后一帧回到交叉剑；s1 末帧剑刃变白"
+  },
+  "favor": {
+   "file": "out/anim/favor/s1spark/strip.png",
+   "candidates": [
+    "out/anim/favor/s0",
+    "out/anim/favor/s2",
+    "out/anim/favor/s0spark",
+    "out/anim/favor/s2spark"
+   ],
+   "why": "一闪就暗回原样，首末帧 = favor-big；代码补下面两角的金色火星；s2 走形"
+  }
  }
 }

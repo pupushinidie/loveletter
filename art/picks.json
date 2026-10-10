@@ -8,7 +8,7 @@
     "value": "s1",
     "label": "s1",
     "file": "out/r1/portraits/spy-s1.png",
-    "description": "评审推荐：金色半脸面具 1× 也认得出，光从左来；左上那支蜡烛已用代码盖掉",
+    "description": "推荐（评审第 1 轮也选它）：金色半脸面具 1× 也认得出，光从左来；左上那支蜡烛已用代码盖掉",
     "recommended": true,
     "fixes": [
      {
@@ -52,7 +52,7 @@
     "value": "s3-kick",
     "label": "s3-kick",
     "file": "out/r1/portraits/guard-s3-kick.png",
-    "description": "评审推荐：唯一一张罩袍上没有十字的，长柄武器清楚",
+    "description": "推荐（评审第 1 轮也选它）：唯一一张罩袍上没有十字的，长柄武器清楚",
     "recommended": true
    },
    {
@@ -84,7 +84,7 @@
     "value": "s3",
     "label": "s3",
     "file": "out/r1/portraits/priest-s3.png",
-    "description": "评审推荐：老人举蜡烛拿书，没有十字，禁区干净",
+    "description": "推荐（评审第 1 轮也选它）：老人举蜡烛拿书，没有十字，禁区干净",
     "recommended": true
    },
    {
@@ -110,7 +110,7 @@
     "value": "s4",
     "label": "s4",
     "file": "out/r1/portraits/baron-s4.png",
-    "description": "评审推荐：八字胡、毛皮领、手按剑柄；左上蜡烛已用代码盖掉",
+    "description": "推荐（评审第 1 轮也选它）：八字胡、毛皮领、手按剑柄；左上蜡烛已用代码盖掉",
     "recommended": true,
     "fixes": [
      {
@@ -149,7 +149,7 @@
     "value": "s3",
     "label": "s3",
     "file": "out/r1/portraits/handmaid-s3.png",
-    "description": "评审推荐：白头巾露出头发，不像修女，帷幕背景和整套一致",
+    "description": "推荐（评审第 1 轮也选它）：白头巾露出头发，不像修女，帷幕背景和整套一致",
     "recommended": true
    },
    {
@@ -167,16 +167,16 @@
   ]
  },
  "prince": {
-  "question": "王子（5）牌面插画（评审第 1 轮要求加金冠，重画）",
+  "question": "王子（5）牌面插画",
   "kind": "portrait",
   "role": "prince",
-  "help": "第 1 轮 7 张都没金冠被退回。这轮用 /edit-image 在 s3、s8 上加细金冠（3 次），另外用代码把 s8 的深蓝上衣换成深红作对比。",
+  "help": "评审第 1 轮 7 张都没金冠被退回，这一轮用 /edit-image 在 s3、s8 上加细金冠，另外用代码把 s8 的深蓝上衣换成深红作对比。",
   "options": [
    {
     "value": "s8-crown-5302",
     "label": "s8-crown-5302",
     "file": "out/r1/portraits/prince-s8-crown-5302.png",
-    "description": "美术首选：金冠正中一颗红宝石，小牌 1× 也一眼看出是冠；深蓝上衣和红披风、红帷幕分得开",
+    "description": "推荐：金冠正中一颗红宝石，小牌 1× 也一眼看出是冠；深蓝上衣和红披风、红帷幕分得开",
     "recommended": true
    },
    {
@@ -208,7 +208,7 @@
     "value": "s1",
     "label": "s1",
     "file": "out/r1/portraits/chancellor-s1.png",
-    "description": "评审推荐：长灰胡子、粗金官链、卷轴，禁区干净",
+    "description": "推荐（评审第 1 轮也选它）：长灰胡子、粗金官链、卷轴，禁区干净",
     "recommended": true
    },
    {
@@ -234,7 +234,7 @@
     "value": "s2",
     "label": "s2",
     "file": "out/r1/portraits/king-s2.png",
-    "description": "评审推荐：金冠红宝石、权杖都清楚；小牌裁切改成 [14,0]，冠整个露出来",
+    "description": "推荐（评审第 1 轮也选它）：金冠红宝石、权杖都清楚；小牌裁切改成 [14,0]，冠整个露出来",
     "recommended": true,
     "miniCrop": [
      14,
@@ -264,7 +264,7 @@
     "value": "s2",
     "label": "s2",
     "file": "out/r1/portraits/countess-s2.png",
-    "description": "评审推荐：黑盘发、珍珠项链、折扇；左上蜡烛已用代码盖掉",
+    "description": "推荐（评审第 1 轮也选它）：黑盘发、珍珠项链、折扇；左上蜡烛已用代码盖掉",
     "recommended": true,
     "fixes": [
      {
@@ -343,7 +343,7 @@
     "value": "s11",
     "label": "s11",
     "file": "out/r1/scenes/night-0-s11.png",
-    "description": "评审推荐：正中壁炉 + 长餐桌，和白天 s22 是同一个构图",
+    "description": "推荐（评审第 1 轮也选它）：正中壁炉 + 长餐桌，和白天 s22 是同一个构图",
     "recommended": true
    },
    {
@@ -368,7 +368,7 @@
     "value": "s32",
     "label": "s32",
     "file": "out/r1/scenes/night-1-s32.png",
-    "description": "评审推荐：正中拱窗 + 两侧书架，和白天 s42 同构图",
+    "description": "推荐（评审第 1 轮也选它）：正中拱窗 + 两侧书架，和白天 s42 同构图",
     "recommended": true
    },
    {
@@ -393,7 +393,7 @@
     "value": "s22",
     "label": "s22",
     "file": "out/r1/scenes/day-0-s22.png",
-    "description": "评审推荐：和夜间 s11 同构图",
+    "description": "推荐（评审第 1 轮也选它）：和夜间 s11 同构图",
     "recommended": true
    },
    {
@@ -418,7 +418,7 @@
     "value": "s42",
     "label": "s42",
     "file": "out/r1/scenes/day-1-s42.png",
-    "description": "评审推荐：和夜间 s32 同构图",
+    "description": "推荐（评审第 1 轮也选它）：和夜间 s32 同构图",
     "recommended": true
    },
    {
@@ -443,7 +443,7 @@
     "value": "8",
     "label": "favor-8",
     "file": "out/r1/icons/favor/favor-8.png",
-    "description": "评审推荐：整个外形就是一颗心，1× 也一眼看出",
+    "description": "推荐（评审第 1 轮也选它）：整个外形就是一颗心，1× 也一眼看出",
     "recommended": true
    },
    {
@@ -469,7 +469,7 @@
     "value": "51",
     "label": "51",
     "file": "out/r1/icons/favor-big/favor-big-51.png",
-    "description": "美术首选：和 favor-8 一样的深红宝石 + 左上白高光、金托，边缘干净",
+    "description": "推荐：和 favor-8 一样的深红宝石 + 左上白高光、金托，边缘干净",
     "recommended": true
    },
    {
@@ -500,7 +500,7 @@
     "value": "0",
     "label": "0",
     "file": "out/r1/icons/shield/shield.png",
-    "description": "美术首选：金边浅蓝盾，没有十字和纹章，和大盾同一个样子",
+    "description": "推荐：金边浅蓝盾，没有十字和纹章，和大盾同一个样子",
     "recommended": true
    },
    {
@@ -525,7 +525,7 @@
     "value": "0",
     "label": "0",
     "file": "out/r1/icons/shield-big/shield-big.png",
-    "description": "美术首选：金边浅蓝盾，左右两色面，和小盾一致",
+    "description": "推荐：金边浅蓝盾，左右两色面，和小盾一致",
     "recommended": true
    },
    {
@@ -550,7 +550,7 @@
     "value": "35",
     "label": "35",
     "file": "out/r1/icons/spy/spy-35.png",
-    "description": "美术首选：左右对称的金面具、两个黑眼洞，1× 一眼看出是面具",
+    "description": "推荐：左右对称的金面具、两个黑眼洞，1× 一眼看出是面具",
     "recommended": true
    },
    {
@@ -581,7 +581,7 @@
     "value": "9",
     "label": "9",
     "file": "out/r1/icons/out/out-9.png",
-    "description": "美术首选：粗白蜡烛 + 一缕灰烟 + 金烛台，1× 清楚",
+    "description": "推荐：粗白蜡烛 + 一缕灰烟 + 金烛台，1× 清楚",
     "recommended": true
    },
    {
@@ -612,7 +612,7 @@
     "value": "3",
     "label": "3",
     "file": "out/r1/icons/crown/crown-3.png",
-    "description": "美术首选：五尖金冠正中一颗红宝石，轮廓干净",
+    "description": "推荐：五尖金冠正中一颗红宝石，轮廓干净",
     "recommended": true
    },
    {
@@ -644,7 +644,7 @@
     "value": "8",
     "label": "8",
     "file": "out/r2/icons/letter-8-outline.png",
-    "description": "美术首选：火漆是心形，1× 也看得出是封情书",
+    "description": "推荐：火漆是心形，1× 也看得出是封情书",
     "recommended": true,
     "source": "out/r1/icons/letter/letter-8.png",
     "outline": true
@@ -675,7 +675,7 @@
     "value": "1",
     "label": "1",
     "file": "out/r1/icons/sealed/sealed-1.png",
-    "description": "美术首选：金边红火漆，中间心形凸起",
+    "description": "推荐：金边红火漆，中间心形凸起",
     "recommended": true
    },
    {
@@ -706,7 +706,7 @@
     "value": "8",
     "label": "8",
     "file": "out/r1/icons/candle/candle-8.png",
-    "description": "美术首选：白蜡烛立在金烛盘正中，左右对称，火苗清楚",
+    "description": "推荐：白蜡烛立在金烛盘正中，左右对称，火苗清楚",
     "recommended": true
    },
    {
@@ -737,7 +737,7 @@
     "value": "5",
     "label": "5",
     "file": "out/r1/icons/duel-big/duel-big-5.png",
-    "description": "美术首选：两把带杯形护手的细剑交叉，最像决斗",
+    "description": "推荐：两把带杯形护手的细剑交叉，最像决斗",
     "recommended": true
    },
    {
@@ -769,7 +769,7 @@
     "value": "seal-sky-20",
     "label": "seal-sky-20",
     "file": "out/r2/seals/seal-sky-20/set.png",
-    "description": "美术首选：火漆边有一圈压出来的凸边，最像真火漆印",
+    "description": "推荐：火漆边有一圈压出来的凸边，最像真火漆印",
     "recommended": true,
     "base": "out/r1/icons/seal-sky/seal-sky-20.png"
    },
@@ -804,7 +804,7 @@
     "value": "s72",
     "label": "s72",
     "file": "out/r1/deco/banner-s72.png",
-    "description": "美术首选：两头是卷起的飘带尾，中间空着放字",
+    "description": "推荐：两头是卷起的飘带尾，中间空着放字",
     "recommended": true
    },
    {
@@ -829,7 +829,7 @@
     "value": "s82",
     "label": "s82",
     "file": "out/r1/deco/letter-win-s82.png",
-    "description": "美术首选：心形火漆 + 金缎带 + 一朵玫瑰，干净",
+    "description": "推荐：心形火漆 + 金缎带 + 一朵玫瑰，干净",
     "recommended": true
    },
    {
@@ -852,17 +852,17 @@
   "help": "第 1 批 3 张（cover-1/2/3）偏空、cover-2 冷蓝，补了 3 个构思 × 2 个种子，挑出 5 张。都不画人、不画字；cover-4b 右下角的签名、cover-5 右下角的水印字已用代码抹掉（art/covers.py）。",
   "options": [
    {
-    "value": "cover-4",
-    "label": "cover-4",
-    "file": "out/covers/cover-4.png",
-    "description": "美术首选：红幕布前的圆桌，一封心形火漆的信、玫瑰、金冠、羽毛笔、蜡烛，饱满，一眼是「宫廷情书」",
-    "recommended": true
-   },
-   {
     "value": "cover-4b",
     "label": "cover-4b",
     "file": "out/covers/cover-4b.png",
-    "description": "同一构思的另一个种子：信、玫瑰、金冠、蜡烛，背后一片烛光光斑；右下角签名已抹掉"
+    "description": "推荐（正式封面）：信、玫瑰、金冠、蜡烛四样都在，金线桌布一眼是宫廷，铺满画面；右下角签名已用代码抹掉",
+    "recommended": true
+   },
+   {
+    "value": "cover-4",
+    "label": "cover-4",
+    "file": "out/covers/cover-4.png",
+    "description": "同一构思：红幕布前的圆桌，信、玫瑰、蜡烛；但金冠上插着羽毛笔（冠和墨水瓶混成一个东西），上半是空幕布"
    },
    {
     "value": "cover-1",
@@ -881,6 +881,148 @@
     "label": "cover-6",
     "file": "out/covers/cover-6.png",
     "description": "换个气氛：黄昏的城堡、玫瑰、阳台上的提灯和信；粉紫色调，偏离烛光夜宴的深红"
+   }
+  ]
+ },
+ "fx-candle": {
+  "question": "座位蜡烛（动画，16×32×6 帧循环）",
+  "kind": "anim",
+  "anim": "candle",
+  "options": [
+   {
+    "value": "scode",
+    "label": "代码火苗",
+    "file": "out/anim/candle/scode/strip.png",
+    "description": "推荐：PixelLab 的蜡烛不动，火苗用它自己的颜色逐帧重画（拉高、左右晃、往下一缩），首末帧接得上，不走形",
+    "recommended": true
+   },
+   {
+    "value": "s0",
+    "label": "PixelLab s0",
+    "file": "out/anim/candle/s0/strip.png",
+    "description": "模型动的：火苗中间变成扁块、露出黑洞"
+   },
+   {
+    "value": "s1",
+    "label": "PixelLab s1",
+    "file": "out/anim/candle/s1/strip.png",
+    "description": "模型动的：火苗变成十字形（spec 不要宗教符号）"
+   },
+   {
+    "value": "s2",
+    "label": "PixelLab s2",
+    "file": "out/anim/candle/s2/strip.png",
+    "description": "模型动的：几帧火苗像十字，动得太少"
+   }
+  ]
+ },
+ "fx-snuff": {
+  "question": "出局：蜡烛熄灭（动画，16×32×8 帧，播一次停在最后一帧）",
+  "kind": "anim",
+  "anim": "snuff",
+  "options": [
+   {
+    "value": "scode",
+    "label": "代码火苗",
+    "file": "out/anim/snuff/scode/strip.png",
+    "description": "推荐：火苗一晃、变小、只剩一点、灭掉冒一缕青烟往上飘，停在干净的熄灭蜡烛；首帧和座位蜡烛一模一样",
+    "recommended": true
+   },
+   {
+    "value": "s0",
+    "label": "PixelLab s0",
+    "file": "out/anim/snuff/s0/strip.png",
+    "description": "模型动的：熄灭后烛芯上一根白棍，看不出烟"
+   },
+   {
+    "value": "s1",
+    "label": "PixelLab s1",
+    "file": "out/anim/snuff/s1/strip.png",
+    "description": "模型动的：烟画成 V 形和十字"
+   },
+   {
+    "value": "s2",
+    "label": "PixelLab s2",
+    "file": "out/anim/snuff/s2/strip.png",
+    "description": "模型动的：中间几帧是白色十字"
+   }
+  ]
+ },
+ "fx-shield": {
+  "question": "侍女护盾展开（动画，32×32×8 帧，播一次）",
+  "kind": "anim",
+  "anim": "shield",
+  "options": [
+   {
+    "value": "s0ring",
+    "label": "s0 + 光圈",
+    "file": "out/anim/shield/s0ring/strip.png",
+    "description": "推荐：盾牌淡入时浅蓝光圈从小到大扩开（代码补的，spec 写的「光圈从小到大」），然后盾牌上方几颗浅蓝光点，最后停在静态盾",
+    "recommended": true
+   },
+   {
+    "value": "s0",
+    "label": "s0",
+    "file": "out/anim/shield/s0/strip.png",
+    "description": "没有光圈，只有上方光点，动静偏小"
+   },
+   {
+    "value": "s1ring",
+    "label": "s1 + 光圈",
+    "file": "out/anim/shield/s1ring/strip.png",
+    "description": "光点画成括号和光环形状，像天使光环"
+   }
+  ]
+ },
+ "fx-duel": {
+  "question": "男爵比牌（动画，32×32×6 帧，播一次）",
+  "kind": "anim",
+  "anim": "duel",
+  "options": [
+   {
+    "value": "s0",
+    "label": "s0",
+    "file": "out/anim/duel/s0/strip.png",
+    "description": "推荐：剑刃一亮、交叉处迸出一团火花、火星散开，最后回到交叉剑",
+    "recommended": true
+   },
+   {
+    "value": "s1",
+    "label": "s1",
+    "file": "out/anim/duel/s1/strip.png",
+    "description": "火花也好，但最后一帧左边剑刃整条变白"
+   },
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/anim/duel/s2/strip.png",
+    "description": "火花偏小，第 1 帧就跳了一下"
+   }
+  ]
+ },
+ "fx-favor": {
+  "question": "钟情标记 +1（动画，32×32×8 帧，播一次）",
+  "kind": "anim",
+  "anim": "favor",
+  "options": [
+   {
+    "value": "s1spark",
+    "label": "s1 + 火星",
+    "file": "out/anim/favor/s1spark/strip.png",
+    "description": "推荐：心形宝石一闪、高光扫过、慢慢暗回原样，下面两角冒金色火星（代码补的）；首末帧就是 favor-big",
+    "recommended": true
+   },
+   {
+    "value": "s0spark",
+    "label": "s0 + 火星",
+    "file": "out/anim/favor/s0spark/strip.png",
+    "description": "整颗心变亮后要好几帧才回来，像一直在发光"
+   },
+   {
+    "value": "s2",
+    "label": "s2",
+    "file": "out/anim/favor/s2/strip.png",
+    "description": "整颗心发白发亮，检查脚本标了走形和坏帧"
    }
   ]
  }

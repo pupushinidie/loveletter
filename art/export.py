@@ -27,7 +27,7 @@ import cardframe as cf  # noqa: E402
 
 ART = Path(__file__).resolve().parent
 PUBLIC = ART / "out" / "final"  # 先导出到这里；换图验收开始时制作人通知，再按 spec 覆盖 apps/web/public/art
-FX = {"candle": (16, 32, 6), "snuff": (16, 32, 8), "shield": (32, 32, 8), "duel": (32, 32, 6), "favor": (32, 32, 8), "petal": (8, 8, 4)}
+FX = {"candle": (16, 32, 6), "snuff": (16, 32, 8), "shield": (32, 32, 8), "duel": (32, 32, 6), "favor": (32, 32, 8)}  # 花瓣 fx/petal 是代码画的正式版，走 simple.MANIFEST
 
 
 def save(img: Image.Image, rel: str, size: tuple[int, int]) -> None:
