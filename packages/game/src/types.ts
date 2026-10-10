@@ -99,7 +99,7 @@ export interface RoundResult {
  * - Peeked.card：只给出牧师的人（观战「看手牌」也能看）；
  * - Compared.playerCard / targetCard：只给比牌的两人（观战「看手牌」也能看）；
  * - Swapped.playerGot / targetGot：只给换牌的两人（观战「看手牌」也能看）；
- * - ChancellorReturned.cards：只给出大臣的人（这是牌堆里的牌，观战谁都看不到）。
+ * - ChancellorReturned.cards：只给出大臣的人（观战「看手牌」的事件里也没有；但他看得到留牌时手里的 3 张，能推出放回的是哪两张，看不到顺序）。
  */
 export type GameEvent =
   /** 新的一小局：发好了牌。faceUp 是 2 人局面朝上移出的 3 张（公开）。 */

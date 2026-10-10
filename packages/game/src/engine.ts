@@ -679,7 +679,10 @@ export function timerSeconds(state: GameState): number {
 // 隐藏信息
 
 export interface RedactOptions {
-  /** 观战「看手牌」：能看到所有人的手牌和手牌相关的私密事件；牌堆、移出的牌、放回牌堆底的牌照样看不到。 */
+  /**
+   * 观战「看手牌」：能看到所有人的手牌和手牌相关的私密事件；牌堆、移出的牌照样看不到。
+   * 放回牌堆底的牌（ChancellorReturned.cards）不给，但他看得到大臣留牌时手里的 3 张，能推出放回的是哪两张，看不到顺序。
+   */
   readonly seeAllHands?: boolean;
 }
 

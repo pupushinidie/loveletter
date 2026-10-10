@@ -82,7 +82,7 @@ BASE_PATH=/loveletter/ npm run build
 | 女伯爵 | 打出时不亮另一张，事件里也没有「是不是被迫」 | 规则书 |
 | 打的是刚抽的还是原来那张 | 不公开（实体游戏里可以看出来，但很多人会混着拿；不公开更不容易漏信息） | 自定 |
 | 同名的牌 | 状态里只记角色名，不给每张牌编号：编号会让人认出「这张卫兵是不是我看过的那张」，比实体游戏多出信息 | 自定 |
-| 牌堆、移出的牌 | 只在服务器上；观战「看手牌」也看不到牌堆和放回牌堆底的牌 | 全站约定 |
+| 牌堆、移出的牌 | 只在服务器上，观战「看手牌」也拿不到牌堆和移出的牌。大臣放回牌堆底的牌不单独下发给观战，但「看手牌」的观战者看得到他留牌时手里的 3 张，所以能推出放回去的是哪两张，只是看不到顺序（房主默认不开「看手牌」） | 全站约定 |
 | 一小局结束后 | 结算画面最多停 15 秒；在线、没托管的真人都点了「下一局」就提前开 | 自定 |
 | 2 人局的 3 张明牌 | 所有人可见的公开字段 `faceUp`；永远不进任何人手里，不算谁的弃牌，和间谍无关 | 勘误 3.2 #6 |
 
@@ -140,7 +140,7 @@ BASE_PATH=/loveletter/ npm run build
 
 `RoundStarted`、`TurnStarted{protectionEnded}`、`Drew{reason: "turn"|"prince", source: "deck"|"setAside", card?}`、`Played{card, target?, guess?}`、`NoEffect{reason: "noTarget"|"emptyDeck"}`、`Guessed{guess, hit}`、`Peeked{card?}`、`Compared{loser, playerCard?, targetCard?}`、`Protected`、`Discarded{card, by}`、`ChancellorDrew{count, cards?}`、`ChancellorReturned{count, cards?}`、`Swapped{playerGot?, targetGot?}`、`Eliminated{reason, by, revealed}`、`RoundEnded{result}`、`Ready`、`GameEnded{winners}`、`TurnTimedOut{stage}`。
 
-带问号的是私密内容，`redactGameForViewer` 只留给有权看的人：抽到的牌和大臣抽的牌只给本人；牧师看到的牌只给出牧师的人；男爵、国王的牌面只给那两个人；放回牌堆底的牌只给出大臣的人（观战「看手牌」也看不到）。其余字段都公开，就是补充文件 3.3 #6 要的公开事件清单：卫兵点了谁、猜什么、中没中；牧师看了谁；男爵谁和谁比、谁输或平手；国王谁和谁换；王子点了谁、弃掉什么；大臣放回几张；王子在牌堆空时让人拿走了移出的牌。
+带问号的是私密内容，`redactGameForViewer` 只留给有权看的人：抽到的牌和大臣抽的牌只给本人；牧师看到的牌只给出牧师的人；男爵、国王的牌面只给那两个人；放回牌堆底的牌和顺序只给出大臣的人（观战「看手牌」的事件里也没有；不过他看得到大臣留牌时手里的 3 张，能推出放回的是哪两张，看不到顺序）。其余字段都公开，就是补充文件 3.3 #6 要的公开事件清单：卫兵点了谁、猜什么、中没中；牧师看了谁；男爵谁和谁比、谁输或平手；国王谁和谁换；王子点了谁、弃掉什么；大臣放回几张；王子在牌堆空时让人拿走了移出的牌。
 
 一个回合的事件顺序：`Played` → 效果（`Guessed`/`Peeked`/`Compared`/`Protected`/`Discarded`+`Drew`/`ChancellorDrew`/`Swapped`/`NoEffect`）→ 可能的 `Eliminated` → 一小局结束时 `RoundEnded`（整场结束再加 `GameEnded`），否则下一位的 `TurnStarted` + `Drew`。打出大臣时停在 `ChancellorDrew`，留牌后是 `ChancellorReturned` 再往下走。超时的回合最前面加一条 `TurnTimedOut`。
 
