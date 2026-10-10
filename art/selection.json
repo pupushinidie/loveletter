@@ -1,27 +1,148 @@
 {
-  "_note": "正式美术选了哪张。路径相对 art/。评审第 1 轮（handoff/art-review-1.md）推荐的已定；王子、favor-big、图标、印章、装饰、动画、封面待定。",
-  "portraits": {
-    "spy": {"file": "out/r1/portraits/spy-s1.png", "fixes": [{"op": "copy-cols", "box": [4, 8, 8, 46], "dx": -4}]},
-    "guard": {"file": "out/r1/portraits/guard-s3-kick.png"},
-    "priest": {"file": "out/r1/portraits/priest-s3.png"},
-    "baron": {"file": "out/r1/portraits/baron-s4.png", "fixes": [{"op": "recolor-warm", "box": [0, 7, 14, 36], "bg": "#0c0a1d", "lum": 26}]},
-    "handmaid": {"file": "out/r1/portraits/handmaid-s3.png"},
-    "prince": {"file": "out/r1/portraits/prince-s8-crown-5303.png", "_pending": "王子加冠（edit-image），待评审终审"},
-    "chancellor": {"file": "out/r1/portraits/chancellor-s1.png"},
-    "king": {"file": "out/r1/portraits/king-s2.png", "miniCrop": [14, 0]},
-    "countess": {"file": "out/r1/portraits/countess-s2.png", "fixes": [{"op": "recolor-warm", "box": [0, 7, 15, 31], "bg": "#141a27"}, {"op": "recolor-warm", "box": [2, 31, 11, 56], "bg": "#141a27"}]},
-    "princess": {"file": "out/r1/portraits/princess-s3-kick.png"}
+ "_note": "正式美术选了哪张。路径相对 art/。评审第 1 轮推荐的已定；带 _pending 的是美术首选、等评审第 2 轮签字（王子、favor-big、图标、印章、装饰、动画首帧、封面）。",
+ "portraits": {
+  "spy": {
+   "file": "out/r1/portraits/spy-s1.png",
+   "fixes": [
+    {
+     "op": "copy-cols",
+     "box": [
+      4,
+      8,
+      8,
+      46
+     ],
+     "dx": -4
+    }
+   ]
   },
-  "scenes": {
-    "night-0": "out/r1/scenes/night-0-s11.png",
-    "night-1": "out/r1/scenes/night-1-s32.png",
-    "day-0": "out/r1/scenes/day-0-s22.png",
-    "day-1": "out/r1/scenes/day-1-s42.png"
+  "guard": {
+   "file": "out/r1/portraits/guard-s3-kick.png"
   },
-  "icons": {
-    "favor": {"file": "out/r1/icons/favor/favor-8.png"},
-    "favor-big": {"file": "out/r1/icons/favor-big/favor-big-27.png", "_pending": "照 favor-8 出的 64 个里挑的，待评审终审"}
+  "priest": {
+   "file": "out/r1/portraits/priest-s3.png"
   },
-  "seals": {},
-  "deco": {}
+  "baron": {
+   "file": "out/r1/portraits/baron-s4.png",
+   "fixes": [
+    {
+     "op": "recolor-warm",
+     "box": [
+      0,
+      7,
+      14,
+      36
+     ],
+     "bg": "#0c0a1d",
+     "lum": 26
+    }
+   ]
+  },
+  "handmaid": {
+   "file": "out/r1/portraits/handmaid-s3.png"
+  },
+  "prince": {
+   "file": "out/r1/portraits/prince-s8-crown-5302.png",
+   "_pending": "王子加冠（edit-image），美术首选，待评审第 2 轮"
+  },
+  "chancellor": {
+   "file": "out/r1/portraits/chancellor-s1.png"
+  },
+  "king": {
+   "file": "out/r1/portraits/king-s2.png",
+   "miniCrop": [
+    14,
+    0
+   ]
+  },
+  "countess": {
+   "file": "out/r1/portraits/countess-s2.png",
+   "fixes": [
+    {
+     "op": "recolor-warm",
+     "box": [
+      0,
+      7,
+      15,
+      31
+     ],
+     "bg": "#141a27"
+    },
+    {
+     "op": "recolor-warm",
+     "box": [
+      2,
+      31,
+      11,
+      56
+     ],
+     "bg": "#141a27"
+    }
+   ]
+  },
+  "princess": {
+   "file": "out/r1/portraits/princess-s3-kick.png"
+  }
+ },
+ "scenes": {
+  "night-0": "out/r1/scenes/night-0-s11.png",
+  "night-1": "out/r1/scenes/night-1-s32.png",
+  "day-0": "out/r1/scenes/day-0-s22.png",
+  "day-1": "out/r1/scenes/day-1-s42.png"
+ },
+ "icons": {
+  "favor": {
+   "file": "out/r1/icons/favor/favor-8.png"
+  },
+  "favor-big": {
+   "file": "out/r1/icons/favor-big/favor-big-51.png",
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "shield": {
+   "file": "out/r1/icons/shield/shield.png",
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "spy": {
+   "file": "out/r1/icons/spy/spy-35.png",
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "out": {
+   "file": "out/r1/icons/out/out-9.png",
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "crown": {
+   "file": "out/r1/icons/crown/crown-3.png",
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "letter": {
+   "file": "out/r1/icons/letter/letter-8.png",
+   "outline": true,
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "sealed": {
+   "file": "out/r1/icons/sealed/sealed-1.png",
+   "_pending": "美术首选，待评审第 2 轮"
+  },
+  "candle": {
+   "file": "out/r1/icons/candle/candle-8.png",
+   "_pending": "动画首帧，美术首选，待评审第 2 轮"
+  },
+  "shield-big": {
+   "file": "out/r1/icons/shield-big/shield-big.png",
+   "_pending": "动画首帧，美术首选，待评审第 2 轮"
+  },
+  "duel-big": {
+   "file": "out/r1/icons/duel-big/duel-big-5.png",
+   "_pending": "动画首帧，美术首选，待评审第 2 轮"
+  }
+ },
+ "seals": {
+  "base": "out/r1/icons/seal-sky/seal-sky-20.png",
+  "_pending": "火漆底 + 代码浮雕图案（art/seals.py），美术首选，待评审第 2 轮"
+ },
+ "deco": {
+  "banner": "out/r1/deco/banner-s72.png",
+  "letter-win": "out/r1/deco/letter-win-s82.png",
+  "_pending": "美术首选，待评审第 2 轮"
+ }
 }

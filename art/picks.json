@@ -167,28 +167,35 @@
   ]
  },
  "prince": {
-  "question": "王子（5）牌面插画",
+  "question": "王子（5）牌面插画（评审第 1 轮要求加金冠，重画）",
   "kind": "portrait",
   "role": "prince",
+  "help": "第 1 轮 7 张都没金冠被退回。这轮用 /edit-image 在 s3、s8 上加细金冠（3 次），另外用代码把 s8 的深蓝上衣换成深红作对比。",
   "options": [
    {
-    "value": "s8-crown-5303",
-    "label": "s8 加冠 ①",
-    "file": "out/r1/portraits/prince-s8-crown-5303.png",
-    "description": "在 s8 上用 edit-image 加了细金冠和红宝石，小牌 1× 看得见冠；上衣仍是深蓝黑色、蜡烛在右边",
+    "value": "s8-crown-5302",
+    "label": "s8-crown-5302",
+    "file": "out/r1/portraits/prince-s8-crown-5302.png",
+    "description": "美术首选：金冠正中一颗红宝石，小牌 1× 也一眼看出是冠；深蓝上衣和红披风、红帷幕分得开",
     "recommended": true
    },
    {
-    "value": "s8-crown-5302",
-    "label": "s8 加冠 ②",
-    "file": "out/r1/portraits/prince-s8-crown-5302.png",
-    "description": "同一张底图换种子，冠上的宝石更大"
+    "value": "s8-crown-5302-red",
+    "label": "s8-crown-5302-red",
+    "file": "out/r1/portraits/prince-s8-crown-5302-red.png",
+    "description": "同一张，上衣用代码换成深红（照 spec）；但上衣和披风、帷幕糊成一片"
+   },
+   {
+    "value": "s8-crown-5303",
+    "label": "s8-crown-5303",
+    "file": "out/r1/portraits/prince-s8-crown-5303.png",
+    "description": "冠更细、宝石小，小牌 1× 冠偏弱"
    },
    {
     "value": "s3-crown-5301",
-    "label": "s3 加冠",
+    "label": "s3-crown-5301",
     "file": "out/r1/portraits/prince-s3-crown-5301.png",
-    "description": "光从左来和整套一致，但冠小，小牌上不如 s8 清楚"
+    "description": "s3 加冠：冠细、手上仍是皮护臂，左边有蜡烛（不在禁区）"
    }
   ]
  },
@@ -454,27 +461,388 @@
   ]
  },
  "favor-big": {
-  "question": "钟情标记（大，32px，结算和 +1 动画用）",
+  "question": "钟情标记（大，32×32）：结算画面、+1 动画首末帧",
   "kind": "icon",
+  "help": "照 favor-8 的设计出（v2 + style_image），64 个里挑 4 个。",
   "options": [
    {
-    "value": "27",
-    "label": "favor-big-27",
-    "file": "out/r1/icons/favor-big/favor-big-27.png",
-    "description": "照 favor-8 出的，最像小图：金色心形托 + 红宝石",
+    "value": "51",
+    "label": "51",
+    "file": "out/r1/icons/favor-big/favor-big-51.png",
+    "description": "美术首选：和 favor-8 一样的深红宝石 + 左上白高光、金托，边缘干净",
     "recommended": true
    },
    {
+    "value": "41",
+    "label": "41",
+    "file": "out/r1/icons/favor-big/favor-big-41.png",
+    "description": "宝石更亮更红，1× 最醒目；和小图颜色差一点"
+   },
+   {
     "value": "21",
-    "label": "favor-big-21",
+    "label": "21",
     "file": "out/r1/icons/favor-big/favor-big-21.png",
-    "description": "托座更细"
+    "description": "金托更厚，宝石偏暗"
+   },
+   {
+    "value": "27",
+    "label": "27",
+    "file": "out/r1/icons/favor-big/favor-big-27.png",
+    "description": "上一个美术先挑的；边上有几个绿灰杂点（导出时能去掉）"
+   }
+  ]
+ },
+ "shield": {
+  "question": "侍女保护图标（16×16）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "0",
+    "label": "0",
+    "file": "out/r1/icons/shield/shield.png",
+    "description": "美术首选：金边浅蓝盾，没有十字和纹章，和大盾同一个样子",
+    "recommended": true
+   },
+   {
+    "value": "2",
+    "label": "2",
+    "file": "out/r1/icons/shield/shield-2.png",
+    "description": "同款，边更暗"
+   },
+   {
+    "value": "7",
+    "label": "7",
+    "file": "out/r1/icons/shield/shield-7.png",
+    "description": "同款，左上高光更强"
+   }
+  ]
+ },
+ "shield-big": {
+  "question": "护盾动画首帧（32×32，fx/shield 最后停在这张，然后换小盾）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "0",
+    "label": "0",
+    "file": "out/r1/icons/shield-big/shield-big.png",
+    "description": "美术首选：金边浅蓝盾，左右两色面，和小盾一致",
+    "recommended": true
+   },
+   {
+    "value": "8",
+    "label": "8",
+    "file": "out/r1/icons/shield-big/shield-big-8.png",
+    "description": "盾尖更尖，面上有细纹"
+   },
+   {
+    "value": "32",
+    "label": "32",
+    "file": "out/r1/icons/shield-big/shield-big-32.png",
+    "description": "面上有颗粒质感"
+   }
+  ]
+ },
+ "icon-spy": {
+  "question": "间谍资格图标（16×16，半脸面具）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "35",
+    "label": "35",
+    "file": "out/r1/icons/spy/spy-35.png",
+    "description": "美术首选：左右对称的金面具、两个黑眼洞，1× 一眼看出是面具",
+    "recommended": true
+   },
+   {
+    "value": "1",
+    "label": "1",
+    "file": "out/r1/icons/spy/spy-1.png",
+    "description": "两边带尖角，像蝴蝶"
+   },
+   {
+    "value": "2",
+    "label": "2",
+    "file": "out/r1/icons/spy/spy-2.png",
+    "description": "和 1 相近，眼洞更大"
+   },
+   {
+    "value": "23",
+    "label": "23",
+    "file": "out/r1/icons/spy/spy-23.png",
+    "description": "更扁更窄，1× 偏小"
+   }
+  ]
+ },
+ "out": {
+  "question": "出局图标（16×16，熄灭冒烟的蜡烛）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "9",
+    "label": "9",
+    "file": "out/r1/icons/out/out-9.png",
+    "description": "美术首选：粗白蜡烛 + 一缕灰烟 + 金烛台，1× 清楚",
+    "recommended": true
+   },
+   {
+    "value": "15",
+    "label": "15",
+    "file": "out/r1/icons/out/out-15.png",
+    "description": "同款，烟更长"
    },
    {
     "value": "41",
-    "label": "favor-big-41",
-    "file": "out/r1/icons/favor-big/favor-big-41.png",
-    "description": "宝石更亮"
+    "label": "41",
+    "file": "out/r1/icons/out/out-41.png",
+    "description": "细蜡烛、红烛台"
+   },
+   {
+    "value": "2",
+    "label": "2",
+    "file": "out/r1/icons/out/out-2.png",
+    "description": "细蜡烛，烟偏淡"
+   }
+  ]
+ },
+ "crown": {
+  "question": "胜者小金冠（16×16）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "3",
+    "label": "3",
+    "file": "out/r1/icons/crown/crown-3.png",
+    "description": "美术首选：五尖金冠正中一颗红宝石，轮廓干净",
+    "recommended": true
+   },
+   {
+    "value": "0",
+    "label": "0",
+    "file": "out/r1/icons/crown/crown.png",
+    "description": "三尖，宝石偏小"
+   },
+   {
+    "value": "53",
+    "label": "53",
+    "file": "out/r1/icons/crown/crown-53.png",
+    "description": "顶上一颗圆球，宝石更大"
+   },
+   {
+    "value": "19",
+    "label": "19",
+    "file": "out/r1/icons/crown/crown-19.png",
+    "description": "更宽更矮"
+   }
+  ]
+ },
+ "letter": {
+  "question": "情书图标（16×16）",
+  "kind": "icon",
+  "help": "候选都没有深色描边，在白天奶油底上发虚；导出时用代码补一圈 #1c0609（预览已经补上）。",
+  "options": [
+   {
+    "value": "8",
+    "label": "8",
+    "file": "out/r2/icons/letter-8-outline.png",
+    "description": "美术首选：火漆是心形，1× 也看得出是封情书",
+    "recommended": true,
+    "source": "out/r1/icons/letter/letter-8.png",
+    "outline": true
+   },
+   {
+    "value": "1",
+    "label": "1",
+    "file": "out/r2/icons/letter-1-outline.png",
+    "description": "同款，火漆偏圆",
+    "source": "out/r1/icons/letter/letter-1.png",
+    "outline": true
+   },
+   {
+    "value": "33",
+    "label": "33",
+    "file": "out/r2/icons/letter-33-outline.png",
+    "description": "金黄信封，在奶油底上更显眼，但火漆是圆团",
+    "source": "out/r1/icons/letter/letter-33.png",
+    "outline": true
+   }
+  ]
+ },
+ "sealed": {
+  "question": "移出区火漆印（16×16）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "1",
+    "label": "1",
+    "file": "out/r1/icons/sealed/sealed-1.png",
+    "description": "美术首选：金边红火漆，中间心形凸起",
+    "recommended": true
+   },
+   {
+    "value": "17",
+    "label": "17",
+    "file": "out/r1/icons/sealed/sealed-17.png",
+    "description": "同款，金边更细"
+   },
+   {
+    "value": "28",
+    "label": "28",
+    "file": "out/r1/icons/sealed/sealed-28.png",
+    "description": "中间是金色盾形，像勋章"
+   },
+   {
+    "value": "6",
+    "label": "6",
+    "file": "out/r1/icons/sealed/sealed-6.png",
+    "description": "没有金边，纯红蜡"
+   }
+  ]
+ },
+ "candle": {
+  "question": "座位蜡烛动画首帧（16×32，fx/candle、fx/snuff 从这张动）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "8",
+    "label": "8",
+    "file": "out/r1/icons/candle/candle-8.png",
+    "description": "美术首选：白蜡烛立在金烛盘正中，左右对称，火苗清楚",
+    "recommended": true
+   },
+   {
+    "value": "24",
+    "label": "24",
+    "file": "out/r1/icons/candle/candle-24.png",
+    "description": "更高更细"
+   },
+   {
+    "value": "0",
+    "label": "0",
+    "file": "out/r1/icons/candle/candle.png",
+    "description": "带把手的烛台，偏左"
+   },
+   {
+    "value": "12",
+    "label": "12",
+    "file": "out/r1/icons/candle/candle-12.png",
+    "description": "火苗更大"
+   }
+  ]
+ },
+ "duel-big": {
+  "question": "比牌动画首帧（32×32，fx/duel 从这张动）",
+  "kind": "icon",
+  "options": [
+   {
+    "value": "5",
+    "label": "5",
+    "file": "out/r1/icons/duel-big/duel-big-5.png",
+    "description": "美术首选：两把带杯形护手的细剑交叉，最像决斗",
+    "recommended": true
+   },
+   {
+    "value": "2",
+    "label": "2",
+    "file": "out/r1/icons/duel-big/duel-big-2.png",
+    "description": "一把杯形护手、一把十字护手"
+   },
+   {
+    "value": "0",
+    "label": "0",
+    "file": "out/r1/icons/duel-big/duel-big.png",
+    "description": "十字护手的直剑，更像骑士剑"
+   },
+   {
+    "value": "6",
+    "label": "6",
+    "file": "out/r1/icons/duel-big/duel-big-6.png",
+    "description": "同 0，剑身更宽"
+   }
+  ]
+ },
+ "seals": {
+  "question": "座位印章（6 个座位一套）",
+  "kind": "set",
+  "help": "v2 只出得了玫瑰/星/日/月，出不了钥匙和羽毛，图案又是金色（琥珀座位上看不清）。所以用 PixelLab 的火漆底（纹理、边、高光）+ 代码画的浅色浮雕图案合成（art/seals.py），色盲模拟下靠图案能分开 6 个座位（art/out/r2/seals-cvd.png）。",
+  "options": [
+   {
+    "value": "seal-sky-20",
+    "label": "seal-sky-20",
+    "file": "out/r2/seals/seal-sky-20/set.png",
+    "description": "美术首选：火漆边有一圈压出来的凸边，最像真火漆印",
+    "recommended": true,
+    "base": "out/r1/icons/seal-sky/seal-sky-20.png"
+   },
+   {
+    "value": "seal-sky-8",
+    "label": "seal-sky-8",
+    "file": "out/r2/seals/seal-sky-8/set.png",
+    "description": "双圈凸边，图案区小一点",
+    "base": "out/r1/icons/seal-sky/seal-sky-8.png"
+   },
+   {
+    "value": "seal-flower-19",
+    "label": "seal-flower-19",
+    "file": "out/r2/seals/seal-flower-19/set.png",
+    "description": "光面火漆，没有凸边，更像纽扣",
+    "base": "out/r1/icons/seal-flower/seal-flower-19.png"
+   },
+   {
+    "value": "simple",
+    "label": "simple",
+    "file": "out/r2/seals/simple/set.png",
+    "description": "现在上线的简洁版（代码画）",
+    "base": null
+   }
+  ]
+ },
+ "banner": {
+  "question": "结算标题缎带（160×32）",
+  "kind": "deco",
+  "options": [
+   {
+    "value": "s72",
+    "label": "s72",
+    "file": "out/r1/deco/banner-s72.png",
+    "description": "美术首选：两头是卷起的飘带尾，中间空着放字",
+    "recommended": true
+   },
+   {
+    "value": "s73",
+    "label": "s73",
+    "file": "out/r1/deco/banner-s73.png",
+    "description": "两头卷轴，中间很亮，压字时要描边"
+   },
+   {
+    "value": "s71",
+    "label": "s71",
+    "file": "out/r1/deco/banner-s71.png",
+    "description": "两头尖角 + 卷轴，渐变有明显色带"
+   }
+  ]
+ },
+ "letter-win": {
+  "question": "整局胜利主图（64×48）",
+  "kind": "deco",
+  "options": [
+   {
+    "value": "s82",
+    "label": "s82",
+    "file": "out/r1/deco/letter-win-s82.png",
+    "description": "美术首选：心形火漆 + 金缎带 + 一朵玫瑰，干净",
+    "recommended": true
+   },
+   {
+    "value": "s83",
+    "label": "s83",
+    "file": "out/r1/deco/letter-win-s83.png",
+    "description": "多一支蜡烛，玫瑰在右"
+   },
+   {
+    "value": "s81",
+    "label": "s81",
+    "file": "out/r1/deco/letter-win-s81.png",
+    "description": "斜放的信 + 蜡烛，底下一块灰投影在深底上发脏"
    }
   ]
  }

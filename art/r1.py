@@ -218,6 +218,17 @@ COVERS = {
     "cover-3": ("top down view of a crimson velvet card table, a small gold crown, a sealed love letter, a heart shaped ruby gem, "
                 "face down cards with dark red backs, scattered rose petals, warm candlelight", 813),
 }
+# 第 2 批（续做）：前 3 张偏空、cover-2 偏冷蓝，照大厅其他封面的饱满度补 3 个构思 × 2 个种子
+_C4 = ("close up still life filling the whole picture: a cream love letter sealed with a red wax heart, a white quill in a brass inkwell, "
+       "a small gold crown with red gems, a red rose and a golden candlestick with a lit candle, on a deep crimson velvet tablecloth with gold embroidery, "
+       "dark red curtains and warm bokeh candle lights behind")
+_C5 = ("a medieval castle banquet hall at night seen from above the table, a long table with a crimson cloth, many golden candelabras with lit candles, "
+       "silver plates, goblets, a sealed love letter and a fan of face down playing cards with dark red diamond backs in the middle, "
+       "red and gold tapestries on stone walls, warm glowing light")
+_C6 = ("a fairy tale castle at dusk with many warm glowing windows and crimson banners on the towers, a rose garden in front, "
+       "in the foreground a stone balcony ledge with a lit candle lantern, a red rose and a love letter sealed with red wax, warm sunset sky in pink and gold")
+COVERS.update({"cover-4": (_C4, 821), "cover-4b": (_C4, 822), "cover-5": (_C5, 831), "cover-5b": (_C5, 832),
+               "cover-6": (_C6, 841), "cover-6b": (_C6, 842)})
 
 
 def covers(names=None) -> None:

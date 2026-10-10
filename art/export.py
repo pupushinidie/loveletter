@@ -5,7 +5,7 @@ selection.json 结构（路径相对 art/）：
   "portraits": {"<角色>": {"file": "out/r1/portraits/guard-s2.png", "miniCrop": [18, 2], "fix": "说明（可选）"}},
   "scenes":    {"night-0": "out/r1/scenes/night-0-s12.png", ...},
   "icons":     {"<名字>": {"file": "out/r1/icons/favor/favor-12.png"}},   # 也放动画首帧 candle、shield-big、duel-big
-  "seals":     {"0": {"file": "...", "hue": "#d23a4a"}, ...},
+  "seals":     {"base": "out/r1/icons/seal-sky/seal-sky-20.png"},   # 6 个座位都用这张火漆底，见 art/seals.py
   "deco":      {"banner": "...", "letter-win": "..."},
   "covers":    {"recommended": "out/r1/covers/cover-1.png", "candidates": [...]}
 }
@@ -148,15 +148,20 @@ def main() -> None:
             continue  # 动画首帧，不直接导出
         size = (32, 32) if key == "favor-big" else (16, 16)
         img = fit(drop_specks(clean_alpha(Image.open(ART / item["file"]))), *size)
+        if item.get("outline"):  # 候选没有深色描边的（情书信封在奶油底上发虚），补一圈 #1c0609
+            import simple
+            img = simple.outline(img)
         save(img, f"icons/{key}.png", size)
         n += 1
         if key == "favor":
             save(favor_empty(img), "icons/favor-empty.png", size)
             n += 1
-    for idx, item in s.get("seals", {}).items():
-        img = fit(drop_specks(clean_alpha(Image.open(ART / item["file"]))), 24, 24)
-        save(recolor(img, item["hue"]), f"seats/seal-{idx}.png", (24, 24))
-        n += 1
+    seals_sel = s.get("seals", {})
+    if "base" in seals_sel:  # PixelLab 火漆底 + 代码浮雕图案，按座位色换色（art/seals.py）
+        import seals
+        for idx in range(6):
+            save(seals.make(ART / seals_sel["base"], idx), f"seats/seal-{idx}.png", (24, 24))
+            n += 1
     deco = s.get("deco", {})
     if "banner" in deco:
         save(fit(drop_specks(clean_alpha(Image.open(ART / deco["banner"]))), 160, 32), "ui/banner.png", (160, 32))
