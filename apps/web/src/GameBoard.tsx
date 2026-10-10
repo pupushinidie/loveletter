@@ -551,7 +551,7 @@ function GameBoard({
       <div className="ll-main" ref={mainRef}>
         <div
           className={["ll-table", ring ? "ring" : "top", layout.mobile ? "stack" : ""].join(" ")}
-          style={{ "--scene": `url(${scene})`, "--scene-size": coverSize(mainBox.width, mainBox.height), "--cloth": `url(${art.cloth(day)})` } as CSSProperties}
+          style={{ "--scene": `url(${scene})`, "--scene-size": layout.mobile ? "512px 288px" : coverSize(mainBox.width, mainBox.height), "--cloth": `url(${art.cloth(day)})` } as CSSProperties}
         >
           {layout.mobile ? (
             <>
@@ -805,6 +805,11 @@ function SeatHead({ player, member, game, fresh, mobile, you = false }: { player
  */
 function ShieldFx() {
   const [done, setDone] = useState(false);
+  // 兜底：减少动态效果（animation: none）或标签页在后台时 animationend 不一定来，播放时长到了也换成静止小盾牌
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDone(true), 8 * 80 + 200);
+    return () => window.clearTimeout(timer);
+  }, []);
   if (done) return <Icon name="shield" scale={2} title="受侍女保护：到他下一回合开始，别人的牌都不能选他" />;
   return (
     <span className="ll-shield-play" onAnimationEnd={() => setDone(true)}>
@@ -845,7 +850,7 @@ function MyArea({ game, me, member, spectating, layout, fresh, sel, canPlay, pla
       <div className="ll-me-info" onClick={targetable ? onPickSelf : undefined}>
         <SeatHead player={me} member={member} game={game} fresh={fresh} mobile={layout.mobile} you={!spectating} />
         <div className="ll-seat-fan" data-tutorial="discards-me">
-          <Fan entries={me.discards} scale={layout.mobile ? 1 : layout.myDisc} mini={layout.mobile} maxWidth={layout.mobile ? 260 : layout.myDisc === 2 ? 400 : 300} fresh={fresh.discards[me.id] ?? 0} empty={<small>打出的牌摆这里</small>} />
+          <Fan entries={me.discards} scale={layout.mobile ? 1 : layout.myDisc} mini={layout.mobile} maxWidth={layout.mobile ? 260 : layout.myDisc === 2 ? 400 : 300} fresh={fresh.discards[me.id] ?? 0} empty={<small>{layout.mobile ? "还没出牌" : "打出的牌摆这里"}</small>} />
         </div>
         {targetable && <span className="ll-pick-tag">{chosen ? "已选自己" : "点这里选自己"}</span>}
       </div>

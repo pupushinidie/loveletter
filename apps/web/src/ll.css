@@ -400,13 +400,13 @@
 .ll-screen.mobile .ll-topbar-right { flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
 .ll-screen.mobile .ll-topbar-right .connection-status { display: none; }
 .ll-screen.mobile .ll-turn-who .ll-seal { display: none; }
-.ll-chips { display: flex; order: 4; flex-basis: 100%; gap: 6px; overflow: hidden; }
+.ll-chips { display: flex; order: 4; flex-basis: 100%; gap: 4px; overflow: hidden; }
 .ll-chip { display: inline-flex; align-items: center; gap: 2px; padding: 2px 4px 2px 2px; color: var(--gold); background: var(--panel); box-shadow: inset 0 -3px 0 var(--seat-color); }
 .ll-chip b { font-size: 24px; font-weight: 400; line-height: 1; }
 .ll-chip.active { outline: var(--px) solid var(--gold); }
 .ll-chip.out { opacity: 0.55; }
 .ll-screen.mobile .ll-main { display: flex; flex-direction: column; }
-.ll-screen.mobile .ll-table { display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 8px; overflow: visible; }
+.ll-screen.mobile .ll-table { background: linear-gradient(var(--veil), var(--veil)), var(--scene) center top / var(--scene-size) no-repeat, var(--cloth) 0 0 / 64px 64px repeat, #33161c; display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 8px; overflow: visible; }
 .ll-screen.mobile .ll-me { flex-direction: column; align-items: stretch; gap: 8px; }
 /* 手机：手牌和操作区放最前（第一屏一定看得到），自己的名牌和打出区跟在后面；标记数在顶栏的座位条里 */
 .ll-screen.mobile .ll-hand { order: 1; justify-content: center; padding-top: 8px; }

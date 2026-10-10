@@ -258,7 +258,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   },
   {
     kind: "info", id: "spy", lesson: "间谍", anchor: `marks-${RIVAL_2}`, face: "think",
-    say: "咕噜二号打出间谍：本身没效果，名字旁多了个面具。",
+    say: "咕噜二号打出间谍：本身没效果，名字旁多了个间谍标记。",
     note: "这一小局结束时，你没出局、而且在局的人里只有你打过或被弃过间谍，就 +1 枚，不用赢；被王子点到弃掉也算。",
   },
   {
