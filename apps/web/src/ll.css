@@ -439,7 +439,7 @@
   .ll-result-list li { min-height: 40px; padding: 2px 8px 2px 10px; }
   .ll-showdown { gap: 8px; margin-bottom: 6px; }
   .ll-showdown figure { padding-top: 10px; }
-  .ll-showdown figcaption { max-width: 72px; }
+  .ll-showdown figcaption { max-width: 76px; }
   .ll-banner, .ll-banner.big { width: 320px; height: 64px; background-size: 320px 64px; }
   .ll-banner.big span { font-size: 24px; }
   .app-shell .ll-result .ll-dialog-note { margin-bottom: 6px; }

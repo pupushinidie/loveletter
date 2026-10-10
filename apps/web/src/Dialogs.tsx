@@ -245,7 +245,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
               <figure key={player.id} className={winners.includes(player.id) ? "winner" : ""}>
                 {winners.includes(player.id) && <Icon name="crown" className="ll-crown" />}
                 {compact ? <Mini role={role} scale={1} /> : <Card role={role} scale={big ? 2 : 1} title={roleLabel(role)} />}
-                <figcaption><Seal seat={player.seat} /><span>{name(player.id)}</span></figcaption>
+                <figcaption><Seal seat={player.seat} /><span title={name(player.id)}>{name(player.id)}</span></figcaption>
               </figure>
             );
           })}
