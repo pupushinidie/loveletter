@@ -116,7 +116,8 @@
 .ll-fan-card { position: absolute; top: 0; display: block; filter: drop-shadow(2px 2px 0 rgba(10, 3, 4, 0.55)); }
 .ll-fan-card img { display: block; }
 .ll-fan-card.fresh { animation: ll-drop 0.4s steps(4, jump-none); }
-@keyframes ll-drop { 0% { transform: translateY(-24px); } 70% { transform: translateY(3px); } 100% { transform: none; } }
+/* 落下只在打出区里横着滑进来，不往上越过名牌（I5） */
+@keyframes ll-drop { 0% { transform: translateX(-16px); } 70% { transform: translateX(2px); } 100% { transform: none; } }
 .ll-fan-card.eliminated img { filter: saturate(0.6); }
 .ll-how { position: absolute; left: 2px; top: 22px; padding: 0 2px; color: #f7ead8; background: rgba(10, 3, 4, 0.82); font-size: 12px; line-height: 14px; }
 .ll-fan.mini .ll-how { top: 16px; left: 0; }
@@ -129,7 +130,7 @@
 .ll-sprite.once { animation: ll-sprite var(--dur) steps(var(--frames), jump-none) 1 forwards; }
 .ll-sprite.still { background-position: var(--last) 0; }
 @keyframes ll-sprite { from { background-position: 0 0; } to { background-position: var(--last) 0; } }
-.ll-shield-fx { position: absolute; z-index: 5; left: 34px; top: -6px; pointer-events: none; }
+.ll-shield-play { display: inline-flex; width: 32px; height: 32px; }
 
 /* ---------- 中央：牌堆、移出区、记牌条 ---------- */
 .ll-center {
@@ -614,3 +615,46 @@
   box-shadow: 0 0 0 2px #0a0304, inset 2px 2px 0 0 #f25c5c, 0 6px 0 0 rgba(0, 0, 0, 0.35);
 }
 .ll-reconnect .spinner { width: 16px; height: 16px; border: 3px solid rgba(255, 241, 184, 0.35); border-top-color: #fff1b8; border-radius: 0; animation: spin 0.8s steps(8) infinite; }
+
+/* 只给自己看的结果（牧师看牌、男爵比牌、国王换牌）：不挡操作的浮层（I15）。桌面浮在牌桌正中，手机排在操作区下面 */
+.ll-reveal-layer { position: absolute; z-index: 35; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.ll-reveal-layer > * { pointer-events: auto; }
+.app-shell .gm-panel.ll-reveal-float { width: auto; min-width: 0; max-width: min(520px, 100%); padding: 12px 16px; box-shadow: 0 0 0 var(--px) var(--edge), inset var(--px) var(--px) 0 0 var(--gold), inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 var(--shade), 0 8px 0 0 rgba(10, 3, 4, 0.45); }
+.app-shell .ll-reveal-float h2 { margin: 0 0 8px; font-size: 24px; }
+.ll-reveal-float .ll-reveal-cards { margin: 0 0 8px; gap: 12px; }
+.ll-reveal-float .ll-reveal-cards figcaption { font-size: 12px; }
+.ll-reveal-foot { display: flex; align-items: center; gap: 12px; }
+.app-shell .ll-reveal-foot .ll-dialog-note { flex: 1; margin: 0; }
+.app-shell .ll-reveal-foot .primary-button { width: auto; min-height: 44px; margin: 0; padding: 0 16px; font-size: 24px; white-space: nowrap; }
+.ll-screen.mobile .ll-reveal-float { max-width: none; }
+
+/* ---------- 结算 / 整场结束一屏放下（I33） ---------- */
+.ll-result-name small .ll-tag { display: inline-flex; align-items: center; gap: 4px; }
+.ll-result-name small .ll-tag + .ll-tag { margin-left: 8px; }
+/* 矮屏（1024×690 这类）：缎带、主图变小，说明行收掉，名次行压矮 */
+@media (max-height: 760px) {
+  .ll-banner.big { width: 320px; height: 64px; background-size: 320px 64px; }
+  .ll-banner.big span { font-size: 24px; }
+  .ll-final .ll-letter-win { width: 64px; height: 48px; }
+  .app-shell .ll-result .ll-dialog-note { display: none; }
+  .ll-result-list li { min-height: 40px; padding-top: 2px; padding-bottom: 2px; }
+  .ll-standings li { min-height: 40px; }
+  .ll-standings { margin: 4px 0 8px; gap: 4px; }
+  .app-shell .ll-final h2 { margin-bottom: 4px; }
+  .ll-result-next { margin-top: 6px; }
+}
+/* 5–6 人：名字和「赢 +1 / 出局」放一行，♥ 数字小一号；手机上缎带也收掉（标题已经写了谁赢） */
+.ll-result.many .ll-result-name { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 8px; }
+@media (max-width: 699px) {
+  .ll-result.many .ll-banner, .ll-final.many .ll-letter-win { display: none; }
+  .app-shell .ll-result.many .ll-dialog-note { display: none; }
+  .ll-result.many .ll-result-list li { min-height: 36px; padding: 2px 8px 2px 10px; }
+  .ll-result.many .ll-result-tokens b { font-size: 24px; }
+  .ll-result.many .ll-result-tokens b small { font-size: 12px; }
+  .ll-result.many .ll-showdown { margin-bottom: 4px; }
+  .ll-result.many .ll-result-aside { padding: 4px 8px; }
+  .ll-final.many .ll-standings li { min-height: 36px; }
+  .app-shell .ll-final.many h2 { margin: 0 0 4px; }
+}
+/* 花瓣从内容后面飘过，不压名字 */
+.ll-final > :not(.ll-petals) { position: relative; z-index: 1; }

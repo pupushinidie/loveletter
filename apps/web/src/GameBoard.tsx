@@ -199,6 +199,8 @@ function GameBoard({
       if (player.protected && !before.protected) shield.add(player.id);
     }
     setFresh({ discards, out, shield });
+    // 牧师看到的那张已经不在他手里了（他打出 / 被弃掉 / 换走 / 出局）：看牌结果作废，收起来（I14）
+    setReveal((current) => (current?.kind === "peek" && newEvents.some((event) => peekGone(event, current.target, current.card)) ? null : current));
     if (!spectating && !autoPlaying && game.phase === "playing" && !timedOut(newEvents, selfId)) {
       const found = revealFrom(newEvents, selfId);
       if (found) setReveal(found);
@@ -470,6 +472,8 @@ function GameBoard({
     </aside>
   );
 
+  const revealPanel = reveal ? <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={1} onClose={() => setReveal(null)} /> : null;
+
   const timer = secondsLeft !== null && game.phase !== "finished" && (
     <b className={secondsLeft <= 10 ? "ll-timer low" : "ll-timer"} data-tutorial="timer" title="这一步还剩几秒；超时由人机替你打完这一回合">{secondsLeft}s</b>
   );
@@ -526,6 +530,7 @@ function GameBoard({
           {layout.mobile ? (
             <>
               {mySeat}
+              {revealPanel}
               {center}
               <div className="ll-opps">{opponents.map((player) => seatEl(player, "opp"))}</div>
             </>
@@ -536,6 +541,7 @@ function GameBoard({
               {center}
               {midR && <div className="ll-mid right" style={{ gridArea: "right" }}>{seatEl(midR, "right")}</div>}
               {mySeat}
+              {revealPanel && <div className="ll-reveal-layer">{revealPanel}</div>}
             </>
           )}
         </div>
@@ -555,11 +561,11 @@ function GameBoard({
           onCancel={() => setSel({ index: sel.index, card: sel.card })}
         />
       )}
-      {reveal && <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={layout.mobile ? 1 : layout.hand} onClose={() => setReveal(null)} />}
-      {!reveal && game.lastRound && game.phase !== "playing" && !resultHidden && (
+
+      {game.lastRound && game.phase !== "playing" && !resultHidden && (
         <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
       )}
-      {!reveal && game.phase === "finished" && !finalHidden && resultHidden && (
+      {game.phase === "finished" && !finalHidden && resultHidden && (
         <FinalDialog game={game} room={room} me={selfId} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} {...(finalActions ? { actions: finalActions } : {})} />
       )}
       {confirmDialog}
@@ -579,6 +585,23 @@ function GameBoard({
       {tips.tip && <TipToast tip={tips.tip} onClose={tips.dismiss} onNever={tips.never} host='[data-tutorial="action-panel"]' />}
     </div>
   );
+}
+
+/** 这一步之后，target 手里那张 card（牧师看到的）还算不算数。 */
+function peekGone(event: GameEvent, target: string, card: Role): boolean {
+  switch (event.type) {
+    case "Played":
+      return event.player === target && event.card === card;
+    case "Discarded":
+    case "Eliminated":
+      return event.player === target;
+    case "Swapped":
+      return event.player === target || event.target === target;
+    case "ChancellorDrew":
+      return event.player === target;
+    default:
+      return false;
+  }
 }
 
 /** 这串事件里有没有「me 超时、由人机代打」（这一回合的秘密结果不弹窗）。 */
@@ -712,7 +735,6 @@ function Seat({ player, member, game, layout, area, fresh, choosable, blocked, c
       </div>
       {blocked && <span className="ll-blocked-tag">{blocked}</span>}
       {choosable && <span className="ll-pick-tag">{chosen ? "已选" : "点这里选他"}</span>}
-      {fresh.shield.has(player.id) && <Sprite name="shield" scale={2} mode="once" className="ll-shield-fx" />}
     </section>
   );
 }
@@ -734,7 +756,9 @@ function SeatHead({ player, member, game, fresh, mobile, you = false }: { player
         {offline && !member?.bot && <small className="ll-offline">离线</small>}
       </span>
       <span className="ll-marks" data-tutorial={`marks-${player.id}`}>
-        {player.protected && <Icon name="shield" scale={mobile ? 1 : 2} title="受侍女保护：到他下一回合开始，别人的牌都不能选他" />}
+        {player.protected && (fresh.shield.has(player.id) && !mobile
+          ? <ShieldFx key={`shield-${game.version}`} />
+          : <Icon name="shield" scale={mobile ? 1 : 2} title="受侍女保护：到他下一回合开始，别人的牌都不能选他" />)}
         {player.spy && !player.out && <Icon name="spy" scale={mobile ? 1 : 2} title="打出或弃过间谍：一小局结束时如果在局的人里只有他有，额外 +1" />}
         {player.out && <small className="ll-out-tag">出局</small>}
       </span>
@@ -743,6 +767,20 @@ function SeatHead({ player, member, game, fresh, mobile, you = false }: { player
         <b>{player.tokens}</b><small>/{game.config.tokensToWin}</small>
       </span>
     </div>
+  );
+}
+
+/**
+ * 侍女护盾展开：在名字右边的小盾牌位置原地播一次（32×32，不压任何文字），播完换成静止的小盾牌（I23）。
+ * 不能用 forwards 停在最后一帧挂着：之前挂在名牌左边，盖住名字直到下一步。
+ */
+function ShieldFx() {
+  const [done, setDone] = useState(false);
+  if (done) return <Icon name="shield" scale={2} title="受侍女保护：到他下一回合开始，别人的牌都不能选他" />;
+  return (
+    <span className="ll-shield-play" onAnimationEnd={() => setDone(true)}>
+      <Sprite name="shield" scale={1} mode="once" />
+    </span>
   );
 }
 
@@ -781,7 +819,6 @@ function MyArea({ game, me, member, spectating, layout, fresh, sel, canPlay, pla
           <Fan entries={me.discards} scale={layout.mobile ? 1 : layout.myDisc} mini={layout.mobile} maxWidth={layout.mobile ? 260 : layout.myDisc === 2 ? 400 : 300} fresh={fresh.discards[me.id] ?? 0} empty={<small>打出的牌摆这里</small>} />
         </div>
         {targetable && <span className="ll-pick-tag">{chosen ? "已选自己" : "点这里选自己"}</span>}
-        {fresh.shield.has(me.id) && <Sprite name="shield" scale={2} mode="once" className="ll-shield-fx" />}
       </div>
       <div className={["ll-hand", hand.length > 2 ? "three" : "", canPlay ? "live" : ""].join(" ")} style={{ "--card-w": `${72 * scale}px` } as CSSProperties} data-tutorial="hand">
         {hand.length === 0 && <span className="ll-hand-empty">{me.out ? "出局了" : ""}</span>}

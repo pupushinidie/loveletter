@@ -134,6 +134,10 @@ export type Reveal =
   | { kind: "compare"; player: string; target: string; playerCard: Role; targetCard: Role; loser: string | null }
   | { kind: "swap"; player: string; target: string; playerGot: Role; targetGot: Role };
 
+/**
+ * 只给自己看的结果。不是模态框（I15）：浮在牌桌中央（手机上排在操作区下面），手牌、选人、按钮照样能点，
+ * 倒计时不会被一个弹窗吃掉；点「知道了」收起，记录里也有一条。
+ */
 export function RevealDialog({ reveal, me, name, seatOf, scale, onClose }: {
   reveal: Reveal;
   me: string;
@@ -180,14 +184,14 @@ export function RevealDialog({ reveal, me, name, seatOf, scale, onClose }: {
     );
   }
   return (
-    <Modal className="ll-reveal" label={title} onClose={onClose} anchor="reveal-dialog">
+    <section className="gm-panel ll-dialog ll-reveal ll-reveal-float" role="status" aria-label={title} data-tutorial="reveal-dialog">
       <h2 data-tutorial="reveal"><Icon name={reveal.kind === "peek" ? "eye" : reveal.kind === "compare" ? "duel" : "swap"} /> {title}</h2>
       {body}
-      <p className="ll-dialog-note">{note}</p>
-      <div className="gm-panel-actions">
-        <button className="primary-button" type="button" autoFocus data-tutorial="reveal-ok" onClick={onClose}>知道了</button>
+      <div className="ll-reveal-foot">
+        <p className="ll-dialog-note">{note}</p>
+        <button className="primary-button" type="button" data-tutorial="reveal-ok" onClick={onClose}>知道了</button>
       </div>
-    </Modal>
+    </section>
   );
 }
 
@@ -217,7 +221,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
   const canReady = me !== "" && game.phase === "roundEnd" && !iAmReady;
   const order = [...game.players].sort((a, b) => Number(winners.includes(b.id)) - Number(winners.includes(a.id)) || b.tokens - a.tokens);
   return (
-    <Modal className="ll-result" label="一小局结算" anchor="result-dialog">
+    <Modal className={["ll-result", game.players.length >= 5 ? "many" : ""].join(" ")} label="一小局结算" anchor="result-dialog">
       <div className="ll-banner" style={{ backgroundImage: `url(${art.banner})` }} data-tutorial="round-result">
         <span>{iWon ? "你赢了这一小局" : `第 ${result.round} 小局结束`}</span>
       </div>
@@ -247,10 +251,11 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
               <span className="ll-result-name">
                 <strong>{name(player.id)}</strong>
                 <small>
-                  {winner && <><Icon name="crown" scale={1} /> 赢 +1</>}
-                  {result.spyBonus === player.id && <><Icon name="spy" scale={1} /> 间谍 +1</>}
-                  {player.out && !winner && <><Icon name="out" scale={1} /> 出局</>}
-                  {!winner && !player.out && result.reason === "showdown" && "点数小了"}
+                  {/* 每一项单独一段，中间有间隔（I6：之前「间谍 +1点数小了」连在一起） */}
+                  {winner && <span className="ll-tag"><Icon name="crown" scale={1} /> 赢 +1</span>}
+                  {result.spyBonus === player.id && <span className="ll-tag"><Icon name="spy" scale={1} /> 间谍 +1</span>}
+                  {player.out && !winner && <span className="ll-tag"><Icon name="out" scale={1} /> 出局</span>}
+                  {!winner && !player.out && result.reason === "showdown" && <span className="ll-tag">点数小了</span>}
                 </small>
               </span>
               <span className="ll-result-tokens">
@@ -319,9 +324,11 @@ export function FinalDialog({ game, room, me, spectating, name, onRematch, onLea
   const winners = game.winners ?? [];
   const accepted = room.rematch?.acceptedIds.includes(socket.id ?? "") ?? false;
   const standings = [...game.players].sort((a, b) => b.tokens - a.tokens || a.seat - b.seat);
+  // 同分同名次（I21）：名次 = 比他多的人数 + 1
+  const rankOf = (tokens: number) => standings.filter((other) => other.tokens > tokens).length + 1;
   const iWon = winners.includes(me);
   return (
-    <Modal className="ll-final" label="整场结束" anchor="final-dialog">
+    <Modal className={["ll-final", game.players.length >= 5 ? "many" : ""].join(" ")} label="整场结束" anchor="final-dialog">
       <div className="ll-petals" aria-hidden="true">
         {Array.from({ length: 12 }, (_, index) => (
           <span key={index} style={{ "--i": index } as CSSProperties}><Sprite name="petal" scale={2} delay={-index * 150} /></span>
@@ -333,7 +340,7 @@ export function FinalDialog({ game, room, me, spectating, name, onRematch, onLea
       <ol className="ll-standings">
         {standings.map((player, index) => (
           <li key={player.id} className={winners.includes(player.id) ? "winner" : ""} style={{ "--seat-color": seatColor(player.seat) } as CSSProperties}>
-            <span className="ll-rank">{winners.includes(player.id) ? <Icon name="crown" /> : index + 1}</span>
+            <span className="ll-rank">{winners.includes(player.id) ? <Icon name="crown" /> : rankOf(player.tokens)}</span>
             <Seal seat={player.seat} />
             <strong>{name(player.id)}</strong>
             <span className="ll-result-tokens"><Icon name="favor" /><b>{player.tokens}<small>/{game.config.tokensToWin}</small></b></span>
