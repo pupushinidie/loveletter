@@ -14,6 +14,8 @@ export function useFirstTimeTips(
   detect: () => readonly string[],
   tips: Readonly<Record<string, { readonly title: string; readonly text: string }>>,
   enabled: boolean,
+  /** 多久自己收起（毫秒）；0 表示不在这里计时（放进页面的小贴士自己按「真正看得见的时间」算，见 TipToast 的 host）。 */
+  autoHideMs = 12_000,
 ) {
   const [tip, setTip] = useState<Tip | null>(null);
   // 刚进房间时的局面里是之前发生的事，不算「第一次遇到」
@@ -29,8 +31,8 @@ export function useFirstTimeTips(
   }, [version, enabled]);
 
   useEffect(() => {
-    if (!tip) return;
-    const timer = window.setTimeout(() => setTip(null), 12_000);
+    if (!tip || autoHideMs <= 0) return;
+    const timer = window.setTimeout(() => setTip(null), autoHideMs);
     return () => window.clearTimeout(timer);
   }, [tip?.id]);
 

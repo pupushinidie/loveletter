@@ -266,8 +266,20 @@ export function TipToast({ tip, onClose, onNever, host }: { tip: Tip; onClose: (
     const timer = window.setInterval(find, 300);
     return () => window.clearInterval(timer);
   }, [host]);
+  // 放进页面的小贴士：被弹窗或出牌按钮挤掉（看不见）的时间不算，真正露出满 12 秒才自己收起
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!host) return;
+    let shown = 0;
+    const timer = window.setInterval(() => {
+      const rect = ref.current?.getBoundingClientRect();
+      if (rect && rect.width > 0 && rect.height > 0) shown += 500;
+      if (shown >= 12_000) onClose();
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [host, tip.id]);
   const body = (
-    <div className={host ? "tut-toast docked" : "tut-toast"} role="status" onClick={host ? onClose : undefined} title={host ? "点一下收起" : undefined}>
+    <div ref={ref} className={host ? "tut-toast docked" : "tut-toast"} role="status" onClick={host ? onClose : undefined} title={host ? "点一下收起" : undefined}>
       <img src={GULU_ICON} alt="" />
       <p><b>{tip.title}</b>{tip.text}</p>
       <div className="tut-toast-actions">

@@ -143,7 +143,11 @@ function GameBoard({
     window.addEventListener("keydown", handle);
     return () => window.removeEventListener("keydown", handle);
   }, [canHint, game.version]);
-  const tips = useFirstTimeTips(GAME_ID, game.version, () => detectTips(game, myId), TIPS, mode === "online" && !spectating);
+  // 小贴士放在操作区里（TipToast 的 host），按看得见的时间自己收起，这里不计时；一小局结束就收起，不留到下一局（I24）
+  const tips = useFirstTimeTips(GAME_ID, game.version, () => detectTips(game, myId), TIPS, mode === "online" && !spectating, 0);
+  useEffect(() => {
+    if (game.phase !== "playing") tips.dismiss();
+  }, [game.phase]);
   // 「提示」按钮：出牌时在操作区标题后面，大臣留牌时在留牌框标题后面（I31：手机、平板没有键盘 H）
   const hintButton = canHint ? (
     <button className={shownHint ? "quiet-button ll-hint-button on" : "quiet-button ll-hint-button"} type="button" data-tutorial="hint" onClick={toggleHint}>
