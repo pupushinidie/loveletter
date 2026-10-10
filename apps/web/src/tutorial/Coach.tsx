@@ -187,7 +187,9 @@ export function Coach({ view, bubble = false }: { view: CoachView; bubble?: bool
     }
   }
 
+  // 箭头放在高亮框旁边（左边指向右，左边放不下放右边），不压在框上面的文字上；两边都放不下才放上下（情书首发验收 I17）
   const arrowAbove = hole !== null && hole.top - 30 >= 8;
+  const arrowSide: "left" | "right" | null = hole === null ? null : hole.left - 34 >= 4 ? "left" : hole.right + 34 <= vw - 4 ? "right" : null;
   return (
     <>
       {view.focus && hole && (
@@ -202,10 +204,14 @@ export function Coach({ view, bubble = false }: { view: CoachView; bubble?: bool
       {hole && <div className="tut-ring" style={{ left: hole.left, top: hole.top, width: hole.right - hole.left, height: hole.bottom - hole.top }} />}
       {hole && view.focus && (
         <img
-          className={arrowAbove ? "tut-arrow" : "tut-arrow up"}
+          className={arrowSide ? `tut-arrow ${arrowSide}` : arrowAbove ? "tut-arrow" : "tut-arrow up"}
           src={ARROW}
           alt=""
-          style={{ left: (hole.left + hole.right) / 2 - 12, top: arrowAbove ? hole.top - 28 : hole.bottom + 8 }}
+          style={
+            arrowSide === "left" ? { left: hole.left - 30, top: (hole.top + hole.bottom) / 2 - 10 }
+            : arrowSide === "right" ? { left: hole.right + 6, top: (hole.top + hole.bottom) / 2 - 10 }
+            : { left: (hole.left + hole.right) / 2 - 12, top: arrowAbove ? hole.top - 28 : hole.bottom + 8 }
+          }
         />
       )}
       <div className={`tut-dock ${placement}`} style={style} ref={dockRef} role="dialog" aria-label="咕噜嘎" aria-live="polite">

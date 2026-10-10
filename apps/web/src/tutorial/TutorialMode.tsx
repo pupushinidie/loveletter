@@ -99,7 +99,20 @@ export default function TutorialMode({ name, brand, themeToggle, theme, waitingR
     setTallAnchor(null);
     if (!step) return;
     let missingSince: number | null = null;
+    let lastScroll = 0;
     const check = () => {
+      // 高亮的东西只露出一部分（手机上常见，比如记牌条在屏幕最下沿）：滚到能看全的地方（首发验收 I16）。
+      // 共用 Coach 只在第一次找到、而且整个在屏幕外时才滚；这里每 0.8 秒最多补滚一次，不和玩家自己滑动抢。
+      const want = document.querySelector("[data-tut-anchor]")?.getAttribute("data-tut-anchor");
+      const target = want ? document.querySelector<HTMLElement>(anchorSelector(want)) : null;
+      if (target && performance.now() - lastScroll > 800) {
+        const rect = target.getBoundingClientRect();
+        const fits = rect.height <= window.innerHeight - 16;
+        if (fits && (rect.top < 0 || rect.bottom > window.innerHeight)) {
+          lastScroll = performance.now();
+          target.scrollIntoView({ block: "center" });
+        }
+      }
       if (step.kind === "info" && step.anchor && !step.subs && !step.until) {
         const resolved = resolveAnchor(game, step.anchor);
         const present = document.querySelector(anchorSelector(resolved));

@@ -30,6 +30,11 @@
   animation: tut-bob 0.8s steps(1, end) infinite;
 }
 .tut-arrow.up { transform: rotate(180deg); }
+/* 放在高亮框左边（指向右）/ 右边（指向左），左右晃 */
+.tut-arrow.left { transform: rotate(-90deg); animation-name: tut-bob-right; }
+.tut-arrow.right { transform: rotate(90deg); animation-name: tut-bob-left; }
+@keyframes tut-bob-right { 50% { translate: 4px 0; } }
+@keyframes tut-bob-left { 50% { translate: -4px 0; } }
 @keyframes tut-bob { 50% { translate: 0 4px; } }
 
 /* ---------- 咕噜嘎的对话框 ---------- */

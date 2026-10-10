@@ -232,9 +232,14 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
     note: "一号手里不是男爵；打出的卫兵摆在你面前，大家都看得见。",
   },
   {
+    kind: "info", id: "set-aside", lesson: "移出的牌", anchor: "set-aside",
+    say: "每一小局开局先面朝下移出 1 张牌，谁都不看。",
+    note: "它这一小局不用，结束时才亮出来；2 人局另外再面朝上亮出 3 张，谁都拿不到。",
+  },
+  {
     kind: "info", id: "stats", lesson: "记牌", anchor: "stats",
     say: "这里数着每种牌还有几张没露面。",
-    note: "整副只有 21 张，打出的牌人人都看得见，记牌是取胜的关键。",
+    note: "整副 21 张，没露面的在牌堆里、移出的那张或别人手里（已经扣掉你手里的），记牌是取胜的关键。",
   },
   {
     kind: "watch", id: "w-priest", anchor: `seat-${RIVAL_1}`,
@@ -253,8 +258,8 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   },
   {
     kind: "info", id: "spy", lesson: "间谍", anchor: `marks-${RIVAL_2}`, face: "think",
-    say: "咕噜二号打出间谍，间谍本身没效果。",
-    note: "但一小局结束时，还在局中的人里只有他打过间谍，他就额外 +1 枚；名字旁的面具就是标记。",
+    say: "咕噜二号打出间谍：本身没效果，名字旁多了个面具。",
+    note: "一小局结束时，只要你没出局、而且还在局的人里只有你打过或被弃过间谍，就 +1；不用赢，被王子弃掉也算。",
   },
   {
     kind: "info", id: "try-prince", lesson: "女伯爵", anchor: "card:prince",
@@ -346,7 +351,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "spy2", anchor: `marks-${RIVAL_1}`, face: "think",
     say: "一号也打了间谍。",
-    note: "二号已经出局，不算了；现在在局的人里只有一号打过间谍，他撑到最后就能多拿 1 枚。",
+    note: "二号已经出局不算了，现在在局的人里只有一号打过间谍：一小局结束时他只要没出局，就 +1。",
   },
   {
     kind: "info", id: "try-princess", lesson: "男爵和公主", anchor: "card:princess",
@@ -403,7 +408,7 @@ export const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     kind: "info", id: "spy-bonus", anchor: "round-tokens", face: "happy",
     say: "你还多拿 1 枚：间谍 +1。",
-    note: "二号也打过间谍，但他出局了不算；在局的人里只有你打过，这 1 枚和赢的 1 枚可以叠加。",
+    note: "你这局早先打过间谍，二号也打过但出局了不算；间谍 +1 不用赢也能拿，这次正好和赢的 1 枚叠加。",
   },
   {
     kind: "info", id: "starter", lesson: "下一局谁先手", anchor: "next-starter",
@@ -455,7 +460,7 @@ export function anchorVisible(state: GameState, anchor: Anchor, viewer = TUTORIA
   if (anchor.startsWith("keep:")) return myTurn && state.stage === "chancellor" && me.hand.includes(anchor.slice(5) as Role);
   // 打公主前的确认框：上一步（try-princess）点出来的，局面上只要求轮到你、手里有公主
   if (anchor === "confirm-dialog") return myTurn && state.stage === "play" && me.hand.includes("princess");
-  if (anchor === "hand" || anchor === "stats" || anchor === "deck" || anchor === "discards-me") return true;
+  if (anchor === "hand" || anchor === "stats" || anchor === "deck" || anchor === "set-aside" || anchor === "discards-me") return true;
   if (anchor.startsWith("seat-") || anchor.startsWith("discards-")) return state.players.some((player) => `seat-${player.id}` === anchor || `discards-${player.id}` === anchor);
   if (anchor.startsWith("marks-")) {
     const player = state.players.find((candidate) => `marks-${candidate.id}` === anchor);
