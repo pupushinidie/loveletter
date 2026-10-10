@@ -144,5 +144,16 @@
   "banner": "out/r1/deco/banner-s72.png",
   "letter-win": "out/r1/deco/letter-win-s82.png",
   "_pending": "美术首选，待评审第 2 轮"
+ },
+ "covers": {
+  "recommended": "out/covers/cover-4.png",
+  "candidates": [
+   "out/covers/cover-4.png",
+   "out/covers/cover-4b.png",
+   "out/covers/cover-1.png",
+   "out/covers/cover-5.png",
+   "out/covers/cover-6.png"
+  ],
+  "_pending": "美术首选，待评审第 2 轮"
  }
 }

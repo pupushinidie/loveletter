@@ -845,5 +845,43 @@
     "description": "斜放的信 + 蜡烛，底下一块灰投影在深底上发脏"
    }
   ]
+ },
+ "cover": {
+  "question": "大厅封面（384×192，上线时装进大厅）",
+  "kind": "cover",
+  "help": "第 1 批 3 张（cover-1/2/3）偏空、cover-2 冷蓝，补了 3 个构思 × 2 个种子，挑出 5 张。都不画人、不画字；cover-4b 右下角的签名、cover-5 右下角的水印字已用代码抹掉（art/covers.py）。",
+  "options": [
+   {
+    "value": "cover-4",
+    "label": "cover-4",
+    "file": "out/covers/cover-4.png",
+    "description": "美术首选：红幕布前的圆桌，一封心形火漆的信、玫瑰、金冠、羽毛笔、蜡烛，饱满，一眼是「宫廷情书」",
+    "recommended": true
+   },
+   {
+    "value": "cover-4b",
+    "label": "cover-4b",
+    "file": "out/covers/cover-4b.png",
+    "description": "同一构思的另一个种子：信、玫瑰、金冠、蜡烛，背后一片烛光光斑；右下角签名已抹掉"
+   },
+   {
+    "value": "cover-1",
+    "label": "cover-1",
+    "file": "out/covers/cover-1.png",
+    "description": "第 1 批：长桌上的信、两座烛台、几张牌和花瓣，偏平"
+   },
+   {
+    "value": "cover-5",
+    "label": "cover-5",
+    "file": "out/covers/cover-5.png",
+    "description": "宴会长桌俯视、满桌烛台和牌；偏暗，缩小后细节看不清；右下角水印已抹掉"
+   },
+   {
+    "value": "cover-6",
+    "label": "cover-6",
+    "file": "out/covers/cover-6.png",
+    "description": "换个气氛：黄昏的城堡、玫瑰、阳台上的提灯和信；粉紫色调，偏离烛光夜宴的深红"
+   }
+  ]
  }
 }

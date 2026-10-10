@@ -75,3 +75,10 @@
 {"time": "2026-10-09 21:22:01", "name": "cover-1", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006561526377995809}, "seconds": 24.6}
 {"time": "2026-10-09 21:22:38", "name": "cover-2", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007715741554896037}, "seconds": 36.5}
 {"time": "2026-10-09 21:23:04", "name": "cover-3", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006859950330522326}, "seconds": 26.4}
+{"time": "2026-10-09 23:42:43", "name": "duel-big", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 152.0, "status": "completed"}
+{"time": "2026-10-09 23:47:41", "name": "cover-4", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007677852789560954}, "seconds": 260.4}
+{"time": "2026-10-09 23:48:12", "name": "cover-4b", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007108169158299764}, "seconds": 31.8}
+{"time": "2026-10-09 23:48:39", "name": "cover-5", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.0067944438987308075}, "seconds": 26.5}
+{"time": "2026-10-09 23:49:07", "name": "cover-5b", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006662139336268107}, "seconds": 27.8}
+{"time": "2026-10-09 23:49:29", "name": "cover-6", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006524975220362345}, "seconds": 21.9}
+{"time": "2026-10-09 23:49:53", "name": "cover-6b", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006439799441231622}, "seconds": 24.2}
