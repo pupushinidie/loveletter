@@ -55,3 +55,23 @@
 {"time": "2026-10-09 19:56:13", "name": "prince-s8-crown-5302", "endpoint": "/edit-image", "usage": {"type": "usd", "usd": 0.00556996668709649}, "seconds": 13.8, "status": "completed"}
 {"time": "2026-10-09 19:57:17", "name": "prince-s8-crown-5303", "endpoint": "/edit-image", "usage": {"type": "usd", "usd": 0.005496359401279026}, "seconds": 63.4, "status": "completed"}
 {"time": "2026-10-09 19:59:51", "name": "favor-big", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 154.0, "status": "completed"}
+{"time": "2026-10-09 20:02:12", "name": "shield", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 140.9, "status": "completed"}
+{"time": "2026-10-09 20:04:35", "name": "shield-big", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 143.7, "status": "completed"}
+{"time": "2026-10-09 20:06:48", "name": "spy", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 132.7, "status": "completed"}
+{"time": "2026-10-09 20:30:54", "name": "out", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 1446.1, "status": "completed"}
+{"time": "2026-10-09 20:31:58", "name": "duel-big", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.0}, "seconds": 63.3, "status": "failed"}
+{"time": "2026-10-09 20:34:14", "name": "crown", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 136.0, "status": "completed"}
+{"time": "2026-10-09 20:36:25", "name": "letter", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 131.8, "status": "completed"}
+{"time": "2026-10-09 20:39:14", "name": "sealed", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 168.3, "status": "completed"}
+{"time": "2026-10-09 21:03:24", "name": "seal-flower", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 1450.3, "status": "completed"}
+{"time": "2026-10-09 21:05:55", "name": "seal-sky", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 151.5, "status": "completed"}
+{"time": "2026-10-09 21:08:43", "name": "candle", "endpoint": "/generate-image-v2", "usage": {"type": "usd", "usd": 0.08}, "seconds": 167.8, "status": "completed"}
+{"time": "2026-10-09 21:09:06", "name": "banner-s71", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006890157779057821}, "seconds": 23.1}
+{"time": "2026-10-09 21:09:45", "name": "banner-s72", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007462642722659641}, "seconds": 38.6}
+{"time": "2026-10-09 21:10:14", "name": "banner-s73", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007040995412402683}, "seconds": 29.2}
+{"time": "2026-10-09 21:10:47", "name": "letter-win-s81", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007191026528676351}, "seconds": 32.5}
+{"time": "2026-10-09 21:21:13", "name": "letter-win-s82", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.00614989972114563}, "seconds": 626.0}
+{"time": "2026-10-09 21:21:37", "name": "letter-win-s83", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006724571598900689}, "seconds": 23.9}
+{"time": "2026-10-09 21:22:01", "name": "cover-1", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006561526377995809}, "seconds": 24.6}
+{"time": "2026-10-09 21:22:38", "name": "cover-2", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.007715741554896037}, "seconds": 36.5}
+{"time": "2026-10-09 21:23:04", "name": "cover-3", "endpoint": "/create-image-pixflux", "usage": {"type": "usd", "usd": 0.006859950330522326}, "seconds": 26.4}
