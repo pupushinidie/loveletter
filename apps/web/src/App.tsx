@@ -75,6 +75,15 @@ function App() {
     });
   }, [room === null]);
 
+  // 对局里的出错提示（比如「还没轮到你。」）走一步就清掉，最多挂 6 秒（I25）
+  const gameVersion = room?.game?.version;
+  useEffect(() => { if (gameVersion !== undefined) setError(""); }, [gameVersion]);
+  useEffect(() => {
+    if (!error || !room?.game) return;
+    const timer = window.setTimeout(() => setError(""), 6000);
+    return () => window.clearTimeout(timer);
+  }, [error, room?.game !== undefined]);
+
   // ---------- 断线 / 刷新后回到座位（I18、I19，见 seat.ts） ----------
   const roomRef = useRef<LobbyRoomSnapshot | null>(null);
   roomRef.current = room;
@@ -658,6 +667,12 @@ function RoomView({ room, busy, error, notice, onCopyCode, onLeave, onStart, onK
           </section>
 
           <section className="room-panel player-panel">
+            {room.code && (
+              /* 手机上房间码那一栏排在下面：这里放一行房间码 + 复制，第一屏就能发给朋友（I27） */
+              <button className="ll-mobile-code" type="button" onClick={onCopyCode} title="复制房间码">
+                <span>房间码</span><b>{room.code}</b><em>复制</em>
+              </button>
+            )}
             <div className="panel-topline">
               <div className="panel-label">玩家 <span>{room.members.length} / {room.capacity}</span></div>
               <span className="waiting-pill"><i /> 等待中</span>

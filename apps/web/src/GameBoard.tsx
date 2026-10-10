@@ -6,6 +6,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
+  botHint,
   ROLE_NAME,
   ROLE_TARGET,
   ROLES,
@@ -382,7 +383,7 @@ function GameBoard({
           <img src={game.deckCount === 0 ? art.slot : game.deckCount >= 8 ? art.deck : art.deckLow} width={PILE_W} height={112} alt="" />
           <span className="ll-pile-count"><b>{game.deckCount}</b><small>牌堆</small></span>
         </div>
-        <div className="ll-pile" data-tutorial="set-aside" title={game.setAsideTaken ? "开局移出的那张已经被王子点到的人拿走" : "开局面朝下移出的 1 张：这一小局谁都不用，结束时亮出来"}>
+        <div className="ll-pile" data-tutorial="set-aside" title={game.setAsideTaken ? "开局移出的那张已经被王子点到的人拿走" : "开局面朝下移出的 1 张：一般谁都拿不到，结束时亮出来；只有牌堆抽空后被王子点到的人会拿走它"}>
           <img src={game.setAsideTaken ? art.slot : art.aside} width={PILE_W} height={112} alt="" />
           <span className="ll-pile-count"><small>{game.setAsideTaken ? "被拿走" : "移出"}</small></span>
         </div>
@@ -472,7 +473,32 @@ function GameBoard({
     </aside>
   );
 
-  const revealPanel = reveal ? <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={1} onClose={() => setReveal(null)} /> : null;
+  // 手机上往下翻看记录 / 聊天时轮到自己：手牌不在屏幕里就在底部弹一条「轮到你了」，点一下滚回去（I26）
+  const [handAway, setHandAway] = useState(false);
+  useEffect(() => {
+    if (!layout.mobile || !myTurn) { setHandAway(false); return; }
+    const hand = document.querySelector('[data-tutorial="hand"]');
+    if (!hand) return;
+    const observer = new IntersectionObserver(([entry]) => setHandAway(!entry!.isIntersecting), { threshold: 0.3 });
+    observer.observe(hand);
+    return () => observer.disconnect();
+  }, [layout.mobile, myTurn]);
+  const backToHand = handAway && myTurn ? (
+    <button className="primary-button ll-turn-float" type="button" onClick={() => document.querySelector('[data-tutorial="hand"]')?.scrollIntoView({ block: "center", behavior: "smooth" })}>
+      轮到你了 ↑{secondsLeft !== null ? ` ${secondsLeft}s` : ""}
+    </button>
+  ) : null;
+
+  // 1920 这类大屏：弹窗跟着放大（I28）
+  const big = !layout.mobile && mainBox.width >= 1500 && mainBox.height >= 820;
+  const revealPanel = reveal ? <RevealDialog reveal={reveal} me={selfId} name={nameOf} seatOf={seatOf} scale={big ? 2 : 1} onClose={() => setReveal(null)} /> : null;
+  // 卫兵猜牌框开着时，「提示」不再用咕噜嘎的框盖在选项上，而是在猜牌框里把推荐的那张直接标出来（I10）
+  const guessOpen = sel?.card === "guard" && !!sel.target && canPlay;
+  const guessHint = guessOpen && shownHint ? (() => {
+    const decision = botHint(game, myId, () => 0);
+    const guess = decision?.command.type === "PLAY" && decision.command.card === "guard" && decision.command.target === sel!.target ? decision.command.guess : undefined;
+    return { say: shownHint.say, ...(shownHint.note ? { note: shownHint.note } : {}), ...(guess ? { guess } : {}) };
+  })() : null;
 
   const timer = secondsLeft !== null && game.phase !== "finished" && (
     <b className={secondsLeft <= 10 ? "ll-timer low" : "ll-timer"} data-tutorial="timer" title="这一步还剩几秒；超时由人机替你打完这一回合">{secondsLeft}s</b>
@@ -555,21 +581,24 @@ function GameBoard({
         <GuessDialog
           targetName={nameOf(sel.target)}
           unseen={unseen}
-          scale={layout.mobile ? 1 : 2}
+          scale={layout.mobile ? 1 : big ? 3 : 2}
           compact={layout.mobile}
+          hint={guessHint}
+          {...(canHint ? { onHint: toggleHint } : {})}
           onPick={(guess) => void playNow(sel, sel.target, guess)}
           onCancel={() => setSel({ index: sel.index, card: sel.card })}
         />
       )}
 
       {game.lastRound && game.phase !== "playing" && !resultHidden && (
-        <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
+        <RoundResultDialog game={game} room={room} me={selfId} name={nameOf} compact={layout.mobile} big={big} seconds={game.phase === "roundEnd" ? secondsLeft : null} onReady={() => onCommand({ type: "READY" })} onHide={() => setResultHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} />
       )}
       {game.phase === "finished" && !finalHidden && resultHidden && (
-        <FinalDialog game={game} room={room} me={selfId} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} {...(finalActions ? { actions: finalActions } : {})} />
+        <FinalDialog game={game} room={room} me={selfId} big={big} spectating={spectating} name={nameOf} onRematch={onRematch} onLeave={onLeave} onHide={() => setFinalHidden(true)} {...(autoPlaying ? { onCancelAuto: () => onAuto(false) } : {})} {...(finalActions ? { actions: finalActions } : {})} />
       )}
+      {backToHand}
       {confirmDialog}
-      {shownHint && (
+      {shownHint && !guessOpen && (
         <Coach
           view={{
             key: `hint-${game.version}`,

@@ -658,3 +658,36 @@
 }
 /* 花瓣从内容后面飘过，不压名字 */
 .ll-final > :not(.ll-petals) { position: relative; z-index: 1; }
+
+/* 手机：轮到自己但手牌不在屏幕里（I26） */
+.app-shell .ll-turn-float { position: fixed; z-index: 800; left: 0; right: 0; bottom: 12px; width: fit-content; min-height: 48px; margin: 0 auto; padding: 0 20px; font-size: 24px; white-space: nowrap; animation: ll-blink 1s steps(2, jump-none) 3; }
+
+/* 手机等候房间：玩家列表上面的房间码一行（I27） */
+.app-shell .ll-mobile-code { display: none; }
+@media (max-width: 759px) {
+  .app-shell .ll-mobile-code {
+    display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 12px; padding: 6px 10px; border: 0; cursor: pointer;
+    color: var(--muted); background: #3a2c10; font: inherit;
+    box-shadow: 0 0 0 var(--px) var(--edge), inset var(--px) var(--px) 0 0 var(--gold-2), inset calc(var(--px) * -1) calc(var(--px) * -1) 0 0 #2a1c06;
+  }
+  .ll-mobile-code b { color: var(--gold); font-size: 24px; font-weight: 400; letter-spacing: 0.15em; }
+  .ll-mobile-code em { margin-left: auto; color: var(--text); font-style: normal; }
+}
+
+/* 卫兵猜牌框里的提示（I10）：推荐的那张金框 + 「推荐」，提示文字写在标题下面，不盖任何选项 */
+.app-shell .ll-guess-hint { margin: 0 0 12px; padding: 6px 10px; color: var(--gold); background: #3a2c10; font-size: 12px; line-height: 1.6; }
+.ll-guess-option.recommended { box-shadow: 0 0 0 calc(var(--px) * 2) var(--gold), 0 0 0 calc(var(--px) * 3) #fff2b8; }
+.ll-guess-option.recommended small { color: var(--gold); }
+
+/* 大屏（1920）：弹窗跟着放大（I28） */
+.app-shell .gm-panel.ll-guess.big { max-width: min(1200px, 100%); }
+.app-shell .gm-panel.ll-result.big { width: min(900px, 100%); max-width: min(900px, 100%); }
+.app-shell .gm-panel.ll-final.big { width: min(720px, 100%); max-width: min(720px, 100%); }
+.ll-final.big .ll-standings li { min-height: 56px; }
+@media (min-width: 1800px) and (min-height: 900px) {
+  .app-shell.ll-room { width: min(1760px, calc(100% - 64px)); }
+  .ll-room .room-grid { gap: 24px; }
+  .ll-room .player-row { min-height: 64px; }
+  .ll-room .room-heading h1 { font-size: 48px; }
+  .app-shell .ll-room .room-code-display { font-size: 48px; }
+}

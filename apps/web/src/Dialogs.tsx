@@ -34,11 +34,14 @@ function Modal({ className, label, children, onClose, anchor }: { className: str
 
 /* ---------- 卫兵猜牌 ---------- */
 
-export function GuessDialog({ targetName, unseen, scale, compact = false, onPick, onCancel }: {
+export function GuessDialog({ targetName, unseen, scale, compact = false, hint, onHint, onPick, onCancel }: {
   targetName: string;
   unseen: Record<Role, number>;
   scale: number;
   compact?: boolean;
+  /** 点了「提示」：人机的建议（推荐的那张在格子里直接标出来，不另外盖一个框）。 */
+  hint?: { say: string; note?: string; guess?: Role } | null;
+  onHint?: () => void;
   onPick: (guess: Role) => void;
   onCancel: () => void;
 }) {
@@ -51,15 +54,19 @@ export function GuessDialog({ targetName, unseen, scale, compact = false, onPick
     return () => window.removeEventListener("keydown", onKey);
   }, [choice, onPick]);
   return (
-    <Modal className={compact ? "ll-guess compact" : "ll-guess"} label="卫兵猜牌" onClose={onCancel}>
+    <Modal className={["ll-guess", compact ? "compact" : "", scale >= 3 ? "big" : ""].join(" ")} label="卫兵猜牌" onClose={onCancel}>
       <h2 data-tutorial="guess-title"><Icon name="target" /> 猜 {targetName} 手里是什么？</h2>
-      <p className="ll-dialog-note">猜中他就出局。不能猜卫兵；数字是还有几张没露面（在牌堆、移出的牌或别人手里）。</p>
+      {hint ? (
+        <p className="ll-guess-hint" role="status" data-tutorial="guess-hint">{hint.say}{hint.note ? ` ${hint.note}` : ""}</p>
+      ) : (
+        <p className="ll-dialog-note">猜中他就出局。不能猜卫兵；数字是还有几张没露面（在牌堆、移出的牌或别人手里）。</p>
+      )}
       <div className="ll-guess-grid" data-tutorial="guess-picker">
         {GUARD_GUESSES.map((role) => (
           <button
             key={role}
             type="button"
-            className={["ll-guess-option", choice === role ? "selected" : "", unseen[role] === 0 ? "none" : ""].join(" ")}
+            className={["ll-guess-option", choice === role ? "selected" : "", unseen[role] === 0 ? "none" : "", hint?.guess === role ? "recommended" : ""].join(" ")}
             aria-pressed={choice === role}
             data-tutorial={`guess-${role}`}
             onClick={() => setChoice(role)}
@@ -68,11 +75,12 @@ export function GuessDialog({ targetName, unseen, scale, compact = false, onPick
           >
             <Mini role={role} scale={scale} />
             <b>{ROLE_NAME[role]}</b>
-            <small>{unseen[role] === 0 ? "都露面了" : `还剩 ${unseen[role]}`}</small>
+            <small>{hint?.guess === role ? "推荐" : unseen[role] === 0 ? "都露面了" : `还剩 ${unseen[role]}`}</small>
           </button>
         ))}
       </div>
       <div className="gm-panel-actions">
+        {onHint && <button className={hint ? "quiet-button ll-hint-button on" : "quiet-button ll-hint-button"} type="button" data-tutorial="guess-hint-button" onClick={onHint}>提示</button>}
         <button className="quiet-button" type="button" onClick={onCancel}>换个人</button>
         <button className="primary-button" type="button" disabled={!choice} data-tutorial="guess-confirm" onClick={() => choice && onPick(choice)}>
           {choice ? `指认 ${targetName} 是${ROLE_NAME[choice]}` : "先选一种牌"}
@@ -197,8 +205,10 @@ export function RevealDialog({ reveal, me, name, seatOf, scale, onClose }: {
 
 /* ---------- 一小局结算 ---------- */
 
-export function RoundResultDialog({ game, room, me, name, seconds, compact = false, onReady, onHide, onCancelAuto }: {
+export function RoundResultDialog({ game, room, me, name, seconds, compact = false, big = false, onReady, onHide, onCancelAuto }: {
   game: GameState;
+  /** 大屏（1920）：亮牌放大一倍。 */
+  big?: boolean;
   /** 托管中：弹窗里放一个「取消托管」（弹窗盖住了牌桌上那个）。 */
   onCancelAuto?: () => void;
   /** 手机：亮牌用小牌。 */
@@ -221,7 +231,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
   const canReady = me !== "" && game.phase === "roundEnd" && !iAmReady;
   const order = [...game.players].sort((a, b) => Number(winners.includes(b.id)) - Number(winners.includes(a.id)) || b.tokens - a.tokens);
   return (
-    <Modal className={["ll-result", game.players.length >= 5 ? "many" : ""].join(" ")} label="一小局结算" anchor="result-dialog">
+    <Modal className={["ll-result", game.players.length >= 5 ? "many" : "", big ? "big" : ""].join(" ")} label="一小局结算" anchor="result-dialog">
       <div className="ll-banner" style={{ backgroundImage: `url(${art.banner})` }} data-tutorial="round-result">
         <span>{iWon ? "你赢了这一小局" : `第 ${result.round} 小局结束`}</span>
       </div>
@@ -234,7 +244,7 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
             return (
               <figure key={player.id} className={winners.includes(player.id) ? "winner" : ""}>
                 {winners.includes(player.id) && <Icon name="crown" className="ll-crown" />}
-                {compact ? <Mini role={role} scale={1} /> : <Card role={role} scale={1} title={roleLabel(role)} />}
+                {compact ? <Mini role={role} scale={1} /> : <Card role={role} scale={big ? 2 : 1} title={roleLabel(role)} />}
                 <figcaption><Seal seat={player.seat} /><span>{name(player.id)}</span></figcaption>
               </figure>
             );
@@ -308,8 +318,9 @@ export function RoundResultDialog({ game, room, me, name, seconds, compact = fal
 
 /* ---------- 整场结束 ---------- */
 
-export function FinalDialog({ game, room, me, spectating, name, onRematch, onLeave, onHide, onCancelAuto, actions }: {
+export function FinalDialog({ game, room, me, spectating, name, onRematch, onLeave, onHide, onCancelAuto, actions, big = false }: {
   game: GameState;
+  big?: boolean;
   /** 有就用它代替「再来一局」那一段（新手教程的练习局：结束教程 / 再练一场）。 */
   actions?: ReactNode;
   onCancelAuto?: () => void;
@@ -328,14 +339,14 @@ export function FinalDialog({ game, room, me, spectating, name, onRematch, onLea
   const rankOf = (tokens: number) => standings.filter((other) => other.tokens > tokens).length + 1;
   const iWon = winners.includes(me);
   return (
-    <Modal className={["ll-final", game.players.length >= 5 ? "many" : ""].join(" ")} label="整场结束" anchor="final-dialog">
+    <Modal className={["ll-final", game.players.length >= 5 ? "many" : "", big ? "big" : ""].join(" ")} label="整场结束" anchor="final-dialog">
       <div className="ll-petals" aria-hidden="true">
         {Array.from({ length: 12 }, (_, index) => (
           <span key={index} style={{ "--i": index } as CSSProperties}><Sprite name="petal" scale={2} delay={-index * 150} /></span>
         ))}
       </div>
       <div className="ll-banner big" style={{ backgroundImage: `url(${art.banner})` }} data-tutorial="final-result"><span>{iWon ? "情书送达" : "整场结束"}</span></div>
-      <img className="ll-letter-win" src={art.letterWin} width={128} height={96} alt="" />
+      <img className="ll-letter-win" src={art.letterWin} width={big ? 192 : 128} height={big ? 144 : 96} alt="" />
       <h2>{winners.length > 1 ? `${winners.map(name).join("、")} 一起赢了` : `${name(winners[0] ?? "")} 赢得了公主的心`}</h2>
       <ol className="ll-standings">
         {standings.map((player, index) => (

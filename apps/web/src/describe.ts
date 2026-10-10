@@ -11,8 +11,8 @@ export const ROLE_EFFECT: Record<Role, string> = {
   priest: "偷看一个人的手牌，只有你看得到。",
   baron: "和一个人比手里剩下那张牌的点数，小的出局；一样大谁都不出局。",
   handmaid: "到你下一回合开始前，别人的牌都不能选你。",
-  prince: "让一个人（可以是自己）弃掉手牌、重抽一张；弃掉的牌不发动。",
-  chancellor: "再抽 2 张，3 张里留 1 张，另外 2 张按你排的顺序放回牌堆底。",
+  prince: "让一个人（可以是自己）弃掉手牌、重抽一张；弃掉的牌不发动。牌堆空了就抽开局移出的那张。",
+  chancellor: "再抽 2 张，3 张里留 1 张，另外 2 张按你排的顺序放回牌堆底。牌堆只剩 1 张就抽 1 放 1，空了就白打。",
   king: "和一个人交换手牌。",
   countess: "打出没有效果；手里同时有国王或王子时，必须打她。",
   princess: "打出或被弃掉，你立刻出局。",
@@ -70,7 +70,11 @@ export function describeEvent(event: GameEvent, name: (id: string) => string, me
         return { text: `${name(event.player)} 重抽了一张${event.card ? `：${roleLabel(event.card)}` : ""}`, icon: "deck", mine: mine(event.player), secret: !!event.card };
       }
       if (!forLog) return null;
-      return event.card ? { text: `你抽到 ${roleLabel(event.card)}`, icon: "deck", mine: true, secret: true } : null;
+      // 观战「看手牌」时别人的抽牌也带牌面：不是自己就写他的名字（I22）
+      if (!event.card) return null;
+      return mine(event.player)
+        ? { text: `你抽到 ${roleLabel(event.card)}`, icon: "deck", mine: true, secret: true }
+        : { text: `${name(event.player)} 抽到 ${roleLabel(event.card)}`, icon: "deck", secret: true };
     case "Played": {
       const target = event.target ? (event.target === event.player ? " → 自己" : ` → ${name(event.target)}`) : "";
       const guess = event.guess ? `，猜 ${ROLE_NAME[event.guess]}` : "";
@@ -81,13 +85,14 @@ export function describeEvent(event: GameEvent, name: (id: string) => string, me
     case "Guessed":
       return { text: event.hit ? `猜中了！${name(event.target)} 手里就是 ${ROLE_NAME[event.guess]}` : `没猜中，${name(event.target)} 手里不是 ${ROLE_NAME[event.guess]}`, icon: "target", mine: mine(event.player, event.target) };
     case "Peeked":
-      if (event.card) return { text: `你看到 ${name(event.target)} 的手牌：${roleLabel(event.card)}`, icon: "eye", secret: true, mine: true };
+      if (event.card && mine(event.player)) return { text: `你看到 ${name(event.target)} 的手牌：${roleLabel(event.card)}`, icon: "eye", secret: true, mine: true };
+      if (event.card) return { text: `${name(event.player)} 看到 ${name(event.target)} 的手牌：${roleLabel(event.card)}`, icon: "eye", secret: true };
       if (mine(event.target)) return { text: `${name(event.player)} 看了你的手牌`, icon: "eye", mine: true };
       return { text: `${name(event.player)} 查看了 ${name(event.target)} 的手牌`, icon: "eye" };
     case "Compared": {
       const result = event.loser ? `${name(event.loser)} 出局` : "平手，谁都不出局";
       if (event.playerCard && event.targetCard) {
-        return { text: `比牌：${name(event.player)} ${roleLabel(event.playerCard)} 对 ${name(event.target)} ${roleLabel(event.targetCard)}，${result}`, icon: "duel", secret: true, mine: true };
+        return { text: `比牌：${name(event.player)} ${roleLabel(event.playerCard)} 对 ${name(event.target)} ${roleLabel(event.targetCard)}，${result}`, icon: "duel", secret: true, mine: mine(event.player, event.target) };
       }
       return { text: `${name(event.player)} 与 ${name(event.target)} 比牌：${result}`, icon: "duel", mine: mine(event.player, event.target) };
     }
@@ -109,7 +114,7 @@ export function describeEvent(event: GameEvent, name: (id: string) => string, me
       };
     case "Swapped":
       if (event.playerGot && event.targetGot) {
-        return { text: `${name(event.player)} 和 ${name(event.target)} 换了手牌：${name(event.player)} 拿到 ${roleLabel(event.playerGot)}，${name(event.target)} 拿到 ${roleLabel(event.targetGot)}`, icon: "swap", secret: true, mine: true };
+        return { text: `${name(event.player)} 和 ${name(event.target)} 换了手牌：${name(event.player)} 拿到 ${roleLabel(event.playerGot)}，${name(event.target)} 拿到 ${roleLabel(event.targetGot)}`, icon: "swap", secret: true, mine: mine(event.player, event.target) };
       }
       return { text: `${name(event.player)} 和 ${name(event.target)} 换了手牌`, icon: "swap", mine: mine(event.player, event.target) };
     case "Eliminated":
