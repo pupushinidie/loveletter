@@ -272,6 +272,12 @@ createScene({ hands: [["guard", "baron"]], protected: [1], discards: [[], ["hand
 
 只有像素风一种画面，配色分夜间（深色，默认）和白天（白底）。夜间配色写在 `app-pixel.css` 和牌桌的样式里；白天版由 `apps/web/day-theme.ts`（Vite 插件）按 `apps/web/day-palette.ts` 的调色表在构建时生成，机械换色不合适的地方在 `src/theme-day.css` 里手写。选择记在浏览器的 `gm-pixel-theme` 里，全站共用。
 
+## 声音
+
+这款还没有背景音乐（`useBgm(NO_BGM)`），房间和教程里顶栏照样有 ♪ 面板（音乐 / 音效 / 语音三条滑杆，`gm-sound.tsx` 全站同一份，不要单独改）。手机牌桌上 ♪ 在顶栏「切换白天版」旁边。
+
+动作音效在 `apps/web/src/game-sfx.ts`：按每一步的 `game.events` 配声音，自己的动作响亮、别人的减半（被卫兵猜中、被比牌、被换牌的人也算自己的），观战全算别人的；刚进房间 / 重连那一下不出声，一下跳了好几步不补放。对照：打出任何牌 = 出牌声；白打 = 过；卫兵猜中 = 击中、猜错 = 空挥；牧师看牌 = 揭晓；男爵比牌 = 剑碰剑（平手碰两下）；侍女 = 护盾铃（保护到期时往下收一声）；王子弃牌 = 翻牌、重抽 = 摸牌；大臣 = 摸 2 张、放回牌堆底 = 出牌声；国王换牌 = 一来一回的擦牌声；出局 = 蜡烛吹灭（自己出局先响失手）；亮牌比点数 = 揭晓，赢小局 = 得分、间谍 +1 = 亮晶晶；新一小局 = 洗牌 + 发牌 + 开局；轮到你 / 回合交出 / 超时 / 整场赢输 / 最后 5 秒倒计时用全站的提示音。点手牌、选人、猜牌选项、大臣留牌是「选中」，点打不了的牌或选不了的人是「不行」。`App.tsx` 里 `useRoomSfx` 管进出房间、开局、聊天，服务器报错响 `sfx.error()`。开发时响过的名字记在 `window.__sfxLog`，自测脚本 `~/projects/qa-reports/tools/loveletter-sfx.mjs`。
+
 ## 部署
 
 服务器上 `~/loveletter`，pm2 进程 `loveletter`（端口 3017），网页在 `/var/www/loveletter`，Caddy `handle_path /loveletter/*`（在付费网关 `@games` 里）。pm2 按根目录的 `ecosystem.config.cjs` 启动；端口和密钥存在 pm2 里，不进仓库。

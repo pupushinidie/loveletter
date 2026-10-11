@@ -30,6 +30,8 @@ import { describeEvent, ROLE_EFFECT, roleLabel, type Line } from "./describe.js"
 import { ChancellorDialog, FinalDialog, GuessDialog, RevealDialog, RoundResultDialog, type Reveal } from "./Dialogs.js";
 import GameRules from "./GameRules.js";
 import { useLayout, type Layout } from "./layout.js";
+import { useGameSfx, pickSfx } from "./game-sfx.js";
+import { useSfxCountdown } from "./gm-sound.js";
 import { GameRoomMenu, SpectateBar } from "./RoomExtras.js";
 import { socket } from "./socket.js";
 import type { Theme } from "./theme.js";
@@ -119,6 +121,9 @@ function GameBoard({
   const myTurn = !spectating && playing && actor?.id === myId;
   const autoPlaying = member?.auto === true;
   const secondsLeft = useCountdown(room);
+  // 音效：每一步的动作（game-sfx.ts）、自己行动最后 5 秒的倒计时
+  useGameSfx(game, selfId);
+  useSfxCountdown(myTurn && !autoPlaying, secondsLeft);
   const memberOf = (playerId: string) => room.members.find((candidate) => candidate.playerId === playerId);
   const nameOf = useCallback(
     (playerId: string) => (playerId === selfId && selfId !== "" ? "你" : game.players.find((player) => player.id === playerId)?.name ?? "?"),
@@ -253,16 +258,19 @@ function GameBoard({
     const role = me.hand[index];
     if (!role) return;
     if (!playable(role)) {
+      pickSfx.deny();
       setHint(forced ? `手里有女伯爵和${me.hand.includes("king") ? "国王" : "王子"}，这回合必须打女伯爵。` : "这张现在打不了。");
       return;
     }
     setHint("");
     if (sel?.index === index) {
-      // 再点同一张：不用选人的牌直接打出
+      // 再点同一张：不用选人的牌直接打出（出牌声由结果那一步响）；还要选人就提示一下
       if (!needsTarget) void playNow(sel);
       else if (sel.target && sel.card !== "guard") void playNow(sel, sel.target);
+      else pickSfx.deny();
       return;
     }
+    pickSfx.select(true);
     setSel({ index, card: role });
   }
 
@@ -270,17 +278,19 @@ function GameBoard({
     if (!sel || !needsTarget) return;
     const player = game.players.find((candidate) => candidate.id === playerId);
     if (!choices.includes(playerId)) {
+      pickSfx.deny();
       setHint(player?.out ? `${nameOf(playerId)} 已经出局了，选不了。` : player?.protected ? `${nameOf(playerId)} 受侍女保护，别人的牌都不能选他。` : "选不了这个人。");
       return;
     }
     setHint("");
+    pickSfx.select(true);
     setSel({ ...sel, target: playerId });
   }
 
   function confirmPlay() {
     if (!sel) return;
     if (needsTarget) {
-      if (!sel.target) { setHint("先选一个人。"); return; }
+      if (!sel.target) { pickSfx.deny(); setHint("先选一个人。"); return; }
       if (sel.card === "guard") return;
       void playNow(sel, sel.target);
       return;
@@ -298,7 +308,7 @@ function GameBoard({
         if (target.tagName !== "BUTTON" || (event.key !== "1" && event.key !== "2" && event.key !== "Escape")) return;
       }
       if (event.key === "1" || event.key === "2") pickCard(Number(event.key) - 1);
-      else if (event.key === "Escape") { setSel(null); setHint(""); }
+      else if (event.key === "Escape") { if (sel) pickSfx.select(false); setSel(null); setHint(""); }
       else if ((event.key === " " || event.key === "Enter") && sel) { event.preventDefault(); confirmPlay(); }
     };
     window.addEventListener("keydown", onKey);
@@ -418,7 +428,7 @@ function GameBoard({
       resultHidden={resultHidden || finalHidden}
       onTarget={pickTarget}
       onConfirm={confirmPlay}
-      onCancel={() => { setSel(null); setHint(""); }}
+      onCancel={() => { pickSfx.select(false); setSel(null); setHint(""); }}
       onAuto={onAuto}
       onShowResult={() => { setResultHidden(false); setFinalHidden(false); }}
       hintButton={game.phase === "playing" && game.stage === "play" ? hintButton : null}
@@ -747,6 +757,7 @@ function Seat({ player, member, game, layout, area, fresh, choosable, blocked, c
       style={{ "--seat-color": seatHex(player.seat), minWidth: seatW, maxWidth: seatW !== undefined ? Math.round(seatW * 1.35) : undefined } as CSSProperties}
       onClick={choosable || blocked ? onPick : undefined}
       role={choosable ? "button" : undefined}
+      data-sfx={choosable || blocked ? "none" : undefined}
       tabIndex={choosable ? 0 : undefined}
       onKeyDown={choosable ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onPick(); } } : undefined}
       aria-label={choosable ? `选 ${player.name}` : undefined}
@@ -847,7 +858,7 @@ function MyArea({ game, me, member, spectating, layout, fresh, sel, canPlay, pla
       style={{ gridArea: "me", "--seat-color": seatHex(me.seat) } as CSSProperties}
       data-tutorial="seat-me"
     >
-      <div className="ll-me-info" onClick={targetable ? onPickSelf : undefined}>
+      <div className="ll-me-info" onClick={targetable ? onPickSelf : undefined} data-sfx={targetable ? "none" : undefined}>
         <SeatHead player={me} member={member} game={game} fresh={fresh} mobile={layout.mobile} you={!spectating} />
         <div className="ll-seat-fan" data-tutorial="discards-me">
           <Fan entries={me.discards} scale={layout.mobile ? 1 : layout.myDisc} mini={layout.mobile} maxWidth={layout.mobile ? 260 : layout.myDisc === 2 ? 400 : 300} fresh={fresh.discards[me.id] ?? 0} empty={<small>{layout.mobile ? "还没出牌" : "打出的牌摆这里"}</small>} />
@@ -870,6 +881,7 @@ function MyArea({ game, me, member, spectating, layout, fresh, sel, canPlay, pla
               disabled={!canPlay || busy || role === "back"}
               aria-pressed={selected}
               aria-disabled={dim || undefined}
+              data-sfx={canPlay && !busy && role !== "back" ? "none" : undefined}
               onClick={() => onCard(index)}
               title={role === "back" ? "手牌" : `${roleLabel(role)}：${ROLE_EFFECT[role]}`}
             >
@@ -933,6 +945,7 @@ function ActionPanel({
                 className={["ll-target", sel.target === player.id ? "selected" : ""].join(" ")}
                 data-tutorial={`target-${player.id === myId ? "me" : player.id}`}
                 disabled={!ok}
+                data-sfx={ok ? "none" : undefined}
                 onClick={() => onTarget(player.id)}
                 style={{ "--seat-color": seatHex(player.seat) } as CSSProperties}
                 title={ok ? `选 ${nameOf(player.id)}` : `${nameOf(player.id)}：${reason}，选不了`}
@@ -947,7 +960,7 @@ function ActionPanel({
       )}
       {myTurn && sel && (
         <div className="ll-action-buttons">
-          <button className="quiet-button" type="button" data-tutorial="cancel-button" onClick={onCancel}>重选</button>
+          <button className="quiet-button" type="button" data-tutorial="cancel-button" data-sfx="none" onClick={onCancel}>重选</button>
           {(!needsTarget || (sel.target && sel.card !== "guard")) && (
             <button className="primary-button" type="button" data-tutorial="play-button" onClick={onConfirm}>
               {needsTarget ? `打出${ROLE_NAME[sel.card]} → ${nameOf(sel.target!)}` : ROLE_TARGET[sel.card] !== "none" ? `白打${ROLE_NAME[sel.card]}` : `打出${ROLE_NAME[sel.card]}`}

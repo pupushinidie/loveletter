@@ -69,6 +69,7 @@ export function GuessDialog({ targetName, unseen, scale, compact = false, hint, 
             className={["ll-guess-option", choice === role ? "selected" : "", unseen[role] === 0 ? "none" : "", hint?.guess === role ? "recommended" : ""].join(" ")}
             aria-pressed={choice === role}
             data-tutorial={`guess-${role}`}
+            data-sfx="select"
             onClick={() => setChoice(role)}
             onDoubleClick={() => onPick(role)}
             title={ROLE_EFFECT[role]}
@@ -113,6 +114,7 @@ export function ChancellorDialog({ hand, scale, onSubmit, hint }: { hand: readon
             className={["ll-pick-card", keep === index ? "kept" : keep !== null ? "returned" : ""].join(" ")}
             aria-pressed={keep === index}
             data-tutorial={`chancellor-keep-${index}`}
+            data-sfx="select"
             onClick={() => { setKeep(index); setFlip(false); }}
           >
             <Card role={role} scale={scale} />
