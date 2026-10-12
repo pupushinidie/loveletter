@@ -295,7 +295,20 @@
 .app-shell .ll-dialog .ll-dialog-note { margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .app-shell .ll-dialog .gm-panel-actions { flex-wrap: wrap; margin-top: 12px; }
 .app-shell .ll-dialog .gm-panel-actions :is(.primary-button, .quiet-button) { width: auto; min-height: 44px; margin: 0; padding: 0 16px; font-size: 24px; white-space: nowrap; }
-.ll-backdrop { z-index: 900; }
+.ll-backdrop { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: #33161c; }
+.ll-backdrop-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100vw, calc(100vh * 16 / 9));
+  height: max(100vh, calc(100vw * 9 / 16));
+  transform: translate(-50%, -50%);
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+.ll-backdrop-art--day { display: none; }
+.ll-backdrop-veil { position: absolute; inset: 0; background: #1a0b0e; opacity: 0.4; }
+.app-shell.ll-home > :not(.ll-backdrop):not(.gm-modal-backdrop), .app-shell.ll-room > :not(.ll-backdrop):not(.gm-modal-backdrop) { position: relative; z-index: 1; }
 
 .app-shell .gm-panel.ll-guess { max-width: min(880px, 100%); }
 .app-shell .gm-panel.ll-result { width: min(680px, 100%); }
@@ -430,7 +443,7 @@
 
 /* 手机上的弹窗：边距收紧，猜牌 4 列小牌 1× */
 @media (max-width: 699px) {
-  .app-shell .ll-backdrop { padding: 8px; }
+  .app-shell .ll-backdrop { padding: 0; }
   .app-shell .gm-panel.ll-dialog { min-width: 0; padding: 12px; }
   .app-shell .ll-dialog h2 { font-size: 24px; }
   .ll-guess-grid { grid-template-columns: repeat(4, minmax(72px, auto)); gap: 4px; }

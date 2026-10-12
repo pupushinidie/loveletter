@@ -6,3 +6,9 @@
 :root[data-theme="day"] .app-shell * { scrollbar-color: #c9a593 var(--bg); }
 /* 牌桌的遮罩：白天场景本来就亮，只压一层很淡的白，免得面板和场景糊在一起 */
 :root[data-theme="day"] .ll-table { --veil: rgba(255, 255, 255, 0.28); }
+
+/* 全屏背景：白天版罩色变浅 */
+:root[data-theme="day"] .ll-backdrop { background: #f2e6e4; }
+:root[data-theme="day"] .ll-backdrop-veil { background: #ffffff; opacity: 0.25; }
+:root[data-theme="day"] .ll-backdrop-art--day { display: block; }
+:root[data-theme="day"] .ll-backdrop-art--night { display: none; }
