@@ -704,3 +704,7 @@
   .ll-room .room-heading h1 { font-size: 48px; }
   .app-shell .ll-room .room-code-display { font-size: 48px; }
 }
+
+/* 全屏背景上的标题/简介、等候房标题垫面板，让文字在图上清楚（参照遥远之地） */
+.app-shell .welcome-copy { padding: 16px 20px 20px; background: var(--panel); box-shadow: 0 0 0 var(--px) var(--edge); }
+.app-shell .room-heading { padding: 12px 16px; background: var(--panel); box-shadow: 0 0 0 var(--px) var(--edge); }
